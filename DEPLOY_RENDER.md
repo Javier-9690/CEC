@@ -46,7 +46,7 @@ MAX_UPLOAD_MB=120
 
 ## 4. Disco persistente
 
-Para que no se pierdan PDFs, Word, PPT, audios, videos y logos cuando Render reinicie o redespliegue el servicio, agrega un Persistent Disk y móntalo en:
+Para que no se pierdan PDFs, Word, PPT, audios y logos cuando Render reinicie o redespliegue el servicio, agrega un Persistent Disk y móntalo en:
 
 ```text
 /var/data
@@ -62,13 +62,18 @@ Cuando el sitio esté en línea:
 4. Sube el logo PNG
 5. Guarda
 
-Esta versión ya trae el logo CEC como logo base, más grande y con fondo integrado al pergamino. El panel sirve para reemplazarlo sin tocar código.
+Esta versión ya trae el logo CEC como logo base. El panel sirve para reemplazarlo sin tocar código.
 
 ## 6. Uso recomendado
 
 1. Crea un tema: por ejemplo, `Simbolismo religioso`.
 2. Sube una guía DOCX o PDF y asóciala a ese tema.
 3. Sube una presentación PDF, PPT o PPTX al mismo tema.
-4. Sube un podcast o un video al mismo tema.
+4. Sube un podcast al mismo tema.
 5. Publica una reseña asociada al mismo tema.
 6. En la página pública del tema aparecerá todo reunido.
+
+
+## Barra de avance
+
+Esta versión incluye una barra de avance al subir archivos desde el panel de administración. La barra muestra el porcentaje y el volumen cargado, especialmente útil para audios, videos y PDF pesados. También agrega una barra visual de reproducción para audios y videos subidos directamente al sitio.

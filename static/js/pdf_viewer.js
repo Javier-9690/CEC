@@ -5,6 +5,7 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   const url = viewer.dataset.pdfUrl;
+  viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); });
   const canvas = document.getElementById('pdfCanvas');
   const ctx = canvas.getContext('2d');
   const pageNumEl = document.getElementById('pageNum');
@@ -77,6 +78,10 @@
   document.addEventListener('keydown', function (event) {
     if (event.key === 'ArrowLeft') onPrevPage();
     if (event.key === 'ArrowRight') onNextPage();
+    const key = (event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && ['s', 'p'].includes(key)) {
+      event.preventDefault();
+    }
   });
 
   pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {

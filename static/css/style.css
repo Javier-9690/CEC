@@ -766,3 +766,65 @@ code {
   line-height: 1.8;
   white-space: normal;
 }
+
+
+/* Barra de avance para subida de archivos y reproducción de audio/video */
+.upload-progress-panel,
+.media-progress-panel {
+  border: 1px solid rgba(92, 66, 35, .42);
+  border-radius: 18px;
+  background: rgba(255, 249, 226, .72);
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.upload-progress-head,
+.media-progress-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+.upload-progress-track,
+.media-progress-track {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(92, 66, 35, .42);
+  background: rgba(47, 36, 24, .12);
+  margin-top: 10px;
+}
+
+.media-progress-track {
+  cursor: pointer;
+}
+
+.upload-progress-fill,
+.media-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--accent));
+  transition: width .18s ease;
+}
+
+.upload-progress-status {
+  margin: 10px 0 0;
+  color: var(--muted-ink);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.media-time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+button[disabled] {
+  opacity: .72;
+  cursor: progress;
+}

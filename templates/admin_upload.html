@@ -4,19 +4,22 @@
 <section class="form-panel parchment-panel">
   <p class="eyebrow">Publicación</p>
   <h1>Subir nuevo material</h1>
-  <form method="post" enctype="multipart/form-data" class="stack-form">
+  <form method="post" enctype="multipart/form-data" class="stack-form" id="materialForm">
     <label>Título
       <input type="text" name="title" required placeholder="Ej: Guía de estudio sobre simbolismo religioso">
     </label>
 
     <div class="form-grid-2">
       <label>Tipo de contenido
-        <select name="kind" required>
+        <select name="kind" id="kindSelect" required>
           <option value="">Selecciona una opción</option>
           <option value="guia">Guía de estudio: PDF, DOC, DOCX</option>
           <option value="presentacion">Presentación: PDF, PPT, PPTX</option>
-          <option value="podcast">Podcast: MP3, WAV, M4A, OGG</option>
-          <option value="video">Video: MP4, WEBM, OGV, MOV</option>
+          <option value="podcast">Podcast subido: MP3, WAV, M4A, OGG</option>
+          <option value="soundcloud">Podcast externo: SoundCloud</option>
+          <option value="video">Video subido: MP4, WEBM, OGV, MOV</option>
+          <option value="youtube">Video externo: YouTube</option>
+          <option value="texto">Texto / artículo escrito</option>
         </select>
       </label>
       <label>Tema existente
@@ -42,15 +45,142 @@
     <label>Descripción
       <textarea name="description" rows="5" placeholder="Breve descripción del contenido"></textarea>
     </label>
-    <label>Archivo
-      <input type="file" name="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,audio/mpeg,audio/wav,audio/mp4,audio/ogg,video/mp4,video/webm,video/ogg,.mp3,.wav,.m4a,.ogg,.mp4,.webm,.ogv,.mov">
-    </label>
 
-    <div class="hint-box">
-      <strong>Nota:</strong> las guías DOCX se convierten a lectura web y conservan tablas básicas. Los PPT/PPTX se visualizan con visor Office cuando tu sitio ya está publicado en Render. Los videos MP4/WEBM/OGV se reproducen directamente en la página. Para máxima estabilidad en presentaciones, también puedes subir una copia exportada a PDF.
+    <div id="fileFields">
+      <label>Archivo
+        <input type="file" name="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx,audio/mpeg,audio/wav,audio/mp4,audio/ogg,video/mp4,video/webm,video/ogg,.mp3,.wav,.m4a,.ogg,.mp4,.webm,.ogv,.mov">
+      </label>
     </div>
 
-    <button class="btn primary" type="submit">Publicar material</button>
+    <div id="externalFields" hidden>
+      <label>Enlace externo
+        <input type="url" name="external_url" id="externalUrl" placeholder="Pega aquí el enlace de YouTube o SoundCloud">
+      </label>
+    </div>
+
+    <div id="textFields" hidden>
+      <label>Contenido escrito
+        <textarea name="text_body" id="textBody" rows="12" placeholder="Escribe aquí el texto del artículo, guía breve, comentario o lectura."></textarea>
+      </label>
+    </div>
+
+    <div class="hint-box">
+      <strong>Modo sin descarga pública:</strong> los materiales subidos se muestran dentro del sitio sin botones de descarga. Para videos y audios largos conviene usar YouTube o SoundCloud, porque no consumen almacenamiento de Render. Para presentaciones con mayor control visual, exporta el PPT/PPTX también como PDF.
+    </div>
+
+    <div class="upload-progress-panel" id="uploadProgressPanel" hidden aria-live="polite">
+      <div class="upload-progress-head">
+        <strong>Subiendo material...</strong>
+        <span id="uploadProgressPercent">0%</span>
+      </div>
+      <div class="upload-progress-track">
+        <div class="upload-progress-fill" id="uploadProgressFill"></div>
+      </div>
+      <p class="upload-progress-status" id="uploadProgressStatus">Preparando carga.</p>
+    </div>
+
+    <button class="btn primary" type="submit" id="submitButton">Publicar material</button>
   </form>
 </section>
+<script>
+(function () {
+  const kindSelect = document.getElementById('kindSelect');
+  const fileFields = document.getElementById('fileFields');
+  const fileInput = document.getElementById('fileInput');
+  const externalFields = document.getElementById('externalFields');
+  const externalUrl = document.getElementById('externalUrl');
+  const textFields = document.getElementById('textFields');
+  const textBody = document.getElementById('textBody');
+  const form = document.getElementById('materialForm');
+  const submitButton = document.getElementById('submitButton');
+  const progressPanel = document.getElementById('uploadProgressPanel');
+  const progressFill = document.getElementById('uploadProgressFill');
+  const progressPercent = document.getElementById('uploadProgressPercent');
+  const progressStatus = document.getElementById('uploadProgressStatus');
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes < 0) return '0 MB';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = bytes;
+    let index = 0;
+    while (value >= 1024 && index < units.length - 1) {
+      value = value / 1024;
+      index += 1;
+    }
+    return value.toFixed(index === 0 ? 0 : 1) + ' ' + units[index];
+  }
+
+  function setProgress(percent, status) {
+    const safePercent = Math.max(0, Math.min(100, percent || 0));
+    progressFill.style.width = safePercent.toFixed(1) + '%';
+    progressPercent.textContent = Math.round(safePercent) + '%';
+    progressStatus.textContent = status || '';
+  }
+
+  function updateFields() {
+    const kind = kindSelect.value;
+    const needsFile = ['guia', 'presentacion', 'podcast', 'video'].includes(kind);
+    const needsExternal = ['youtube', 'soundcloud'].includes(kind);
+    const needsText = kind === 'texto';
+
+    fileFields.hidden = !needsFile;
+    externalFields.hidden = !needsExternal;
+    textFields.hidden = !needsText;
+
+    fileInput.required = needsFile;
+    externalUrl.required = needsExternal;
+    textBody.required = needsText;
+  }
+
+  kindSelect.addEventListener('change', updateFields);
+  updateFields();
+
+  form.addEventListener('submit', function (event) {
+    const kind = kindSelect.value;
+    const hasUploadFile = ['guia', 'presentacion', 'podcast', 'video'].includes(kind) && fileInput.files.length > 0;
+
+    // Solo usamos XHR cuando hay archivo. Así podemos mostrar avance real de subida.
+    if (!hasUploadFile) return;
+
+    event.preventDefault();
+    const formData = new FormData(form);
+    const xhr = new XMLHttpRequest();
+
+    progressPanel.hidden = false;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Subiendo...';
+    setProgress(0, 'Iniciando carga del archivo. No cierres esta pestaña.');
+
+    xhr.open('POST', form.action || window.location.href, true);
+
+    xhr.upload.addEventListener('progress', function (progressEvent) {
+      if (progressEvent.lengthComputable) {
+        const percent = (progressEvent.loaded / progressEvent.total) * 100;
+        setProgress(percent, formatBytes(progressEvent.loaded) + ' de ' + formatBytes(progressEvent.total));
+      } else {
+        progressStatus.textContent = 'Subiendo archivo...';
+      }
+    });
+
+    xhr.addEventListener('load', function () {
+      setProgress(100, 'Carga completada. Publicando material...');
+      if (xhr.status >= 200 && xhr.status < 400) {
+        window.location.href = xhr.responseURL || '{{ url_for("admin_dashboard") }}';
+      } else {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Publicar material';
+        progressStatus.textContent = 'No se pudo completar la carga. Revisa el tamaño o el formato del archivo.';
+      }
+    });
+
+    xhr.addEventListener('error', function () {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Publicar material';
+      progressStatus.textContent = 'Error de conexión durante la carga. Intenta nuevamente.';
+    });
+
+    xhr.send(formData);
+  });
+})();
+</script>
 {% endblock %}

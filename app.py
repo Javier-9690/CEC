@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from typing import Optional
-from urllib.parse import quote
+from urllib.parse import quote, urlparse, parse_qs
 
 from flask import (
     Flask,
@@ -48,14 +48,20 @@ KIND_LABELS = {
     "guia": "Guía de estudio",
     "presentacion": "Presentación",
     "podcast": "Podcast",
+    "soundcloud": "SoundCloud",
     "video": "Video",
+    "youtube": "YouTube",
+    "texto": "Texto / artículo",
 }
 
 KIND_HELP = {
     "guia": "Acepta PDF, DOC o DOCX. Si subes DOCX, la guía se transforma a una lectura web con tablas.",
     "presentacion": "Acepta PDF, PPT o PPTX. Los PDF usan visor propio; los PPT/PPTX se abren con visor Office cuando el sitio está público.",
     "podcast": "Acepta MP3, WAV, M4A u OGG.",
+    "soundcloud": "Pega un enlace de SoundCloud para escucharlo dentro de la página, sin subir audio al servidor.",
     "video": "Acepta MP4, WEBM, OGV o MOV. Se reproduce directamente en la página del tema.",
+    "youtube": "Pega un enlace de YouTube para reproducirlo dentro de la página, sin subir video al servidor.",
+    "texto": "Publica contenido escrito directamente en la página. No ocupa almacenamiento de archivos.",
 }
 
 
@@ -122,12 +128,14 @@ def init_db():
             topic_id INTEGER,
             title TEXT NOT NULL,
             description TEXT,
-            kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'video')),
+            kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'soundcloud', 'video', 'youtube', 'texto')),
             filename TEXT NOT NULL,
             html_filename TEXT,
             original_filename TEXT NOT NULL,
             original_extension TEXT,
             mime_type TEXT,
+            external_url TEXT,
+            text_body TEXT,
             created_at TEXT NOT NULL
         );
 
@@ -153,6 +161,8 @@ def init_db():
         "topic_id": "ALTER TABLE materials ADD COLUMN topic_id INTEGER",
         "html_filename": "ALTER TABLE materials ADD COLUMN html_filename TEXT",
         "original_extension": "ALTER TABLE materials ADD COLUMN original_extension TEXT",
+        "external_url": "ALTER TABLE materials ADD COLUMN external_url TEXT",
+        "text_body": "ALTER TABLE materials ADD COLUMN text_body TEXT",
     }
     for col, sql in material_columns.items():
         if not column_exists(db, "materials", col):
@@ -161,11 +171,12 @@ def init_db():
     if not column_exists(db, "reviews", "topic_id"):
         db.execute("ALTER TABLE reviews ADD COLUMN topic_id INTEGER")
 
-    # Si una base antigua fue creada antes del módulo Video, SQLite conserva el CHECK anterior.
-    # Esta migración reconstruye la tabla para permitir kind='video' sin perder materiales existentes.
+    # Si una base antigua fue creada con un CHECK anterior, SQLite conserva esa restricción.
+    # Esta migración reconstruye la tabla para permitir YouTube, SoundCloud y textos sin perder materiales existentes.
     materials_sql_row = db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='materials'").fetchone()
     materials_sql = materials_sql_row[0] if materials_sql_row else ""
-    if "'video'" not in materials_sql:
+    required_kinds = ("'guia'", "'presentacion'", "'podcast'", "'soundcloud'", "'video'", "'youtube'", "'texto'")
+    if any(kind not in materials_sql for kind in required_kinds):
         db.executescript(
             """
             CREATE TABLE materials_new (
@@ -173,16 +184,18 @@ def init_db():
                 topic_id INTEGER,
                 title TEXT NOT NULL,
                 description TEXT,
-                kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'video')),
+                kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'soundcloud', 'video', 'youtube', 'texto')),
                 filename TEXT NOT NULL,
                 html_filename TEXT,
                 original_filename TEXT NOT NULL,
                 original_extension TEXT,
                 mime_type TEXT,
+                external_url TEXT,
+                text_body TEXT,
                 created_at TEXT NOT NULL
             );
-            INSERT INTO materials_new(id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, created_at)
-            SELECT id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, created_at
+            INSERT INTO materials_new(id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, external_url, text_body, created_at)
+            SELECT id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, external_url, text_body, created_at
             FROM materials;
             DROP TABLE materials;
             ALTER TABLE materials_new RENAME TO materials;
@@ -270,6 +283,41 @@ def validate_file_kind(kind: str, ext: str) -> Optional[str]:
     return None
 
 
+def youtube_embed_url(url: str) -> Optional[str]:
+    """Devuelve una URL segura de inserción para enlaces habituales de YouTube."""
+    if not url:
+        return None
+    parsed = urlparse(url.strip())
+    host = parsed.netloc.lower().replace("www.", "").replace("m.", "")
+    video_id = ""
+    if host == "youtu.be":
+        video_id = parsed.path.strip("/").split("/")[0]
+    elif host.endswith("youtube.com") or host.endswith("youtube-nocookie.com"):
+        if parsed.path.startswith("/watch"):
+            video_id = parse_qs(parsed.query).get("v", [""])[0]
+        elif parsed.path.startswith("/embed/"):
+            video_id = parsed.path.split("/embed/", 1)[1].split("/")[0]
+        elif parsed.path.startswith("/shorts/"):
+            video_id = parsed.path.split("/shorts/", 1)[1].split("/")[0]
+        elif parsed.path.startswith("/live/"):
+            video_id = parsed.path.split("/live/", 1)[1].split("/")[0]
+    video_id = "".join(ch for ch in video_id if ch.isalnum() or ch in {"-", "_"})
+    if not video_id:
+        return None
+    return f"https://www.youtube-nocookie.com/embed/{video_id}"
+
+
+def soundcloud_embed_url(url: str) -> Optional[str]:
+    """Devuelve la URL del widget de SoundCloud para un track, set o playlist."""
+    if not url:
+        return None
+    parsed = urlparse(url.strip())
+    host = parsed.netloc.lower().replace("www.", "")
+    if not (host.endswith("soundcloud.com") or host == "on.soundcloud.com"):
+        return None
+    return "https://w.soundcloud.com/player/?url=" + quote(url.strip(), safe="")
+
+
 def generate_docx_html(source_path: Path, stored_name: str) -> Optional[str]:
     """Convierte DOCX a HTML de lectura. Mantiene tablas básicas con Mammoth."""
     if source_path.suffix.lower() != ".docx":
@@ -334,6 +382,13 @@ def create_app() -> Flask:
 
     app.teardown_appcontext(close_db)
 
+    @app.after_request
+    def add_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        return response
+
     @app.context_processor
     def inject_globals():
         logo_filename = get_setting("logo_filename")
@@ -348,6 +403,8 @@ def create_app() -> Flask:
             "kind_labels": KIND_LABELS,
             "kind_help": KIND_HELP,
             "office_viewer_url": office_viewer_url,
+            "youtube_embed_url": youtube_embed_url,
+            "soundcloud_embed_url": soundcloud_embed_url,
         }
 
     return app
@@ -404,8 +461,9 @@ def index():
     counts = {
         "guia": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='guia'").fetchone()["c"],
         "presentacion": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='presentacion'").fetchone()["c"],
-        "podcast": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='podcast'").fetchone()["c"],
-        "video": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='video'").fetchone()["c"],
+        "podcast": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind IN ('podcast','soundcloud')").fetchone()["c"],
+        "video": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind IN ('video','youtube')").fetchone()["c"],
+        "texto": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='texto'").fetchone()["c"],
         "resena": db.execute("SELECT COUNT(*) AS c FROM reviews").fetchone()["c"],
         "tema": db.execute("SELECT COUNT(*) AS c FROM topics").fetchone()["c"],
     }
@@ -498,7 +556,7 @@ def material_detail(material_id: int):
         material=material,
         docx_html=docx_html,
         ext=ext,
-        file_url_external=url_for("uploaded_file", filename=material["filename"], _external=True),
+        file_url_external=url_for("material_file", material_id=material["id"], _external=True) if material["filename"] else "",
     )
 
 
@@ -519,13 +577,13 @@ def presentation_viewer(material_id: int):
 
 @app.route("/podcasts")
 def podcasts():
-    rows = material_query("m.kind='podcast'")
+    rows = material_query("m.kind IN ('podcast','soundcloud')")
     return render_template("podcasts.html", podcasts=rows)
 
 
 @app.route("/videos")
 def videos():
-    rows = material_query("m.kind='video'")
+    rows = material_query("m.kind IN ('video','youtube')")
     return render_template("videos.html", videos=rows)
 
 
@@ -535,9 +593,34 @@ def reviews():
     return render_template("reviews.html", reviews=rows)
 
 
+def protected_inline_response(filename: str, display_name: str = ""):
+    response = send_from_directory(UPLOAD_DIR, filename, as_attachment=False)
+    safe_name = quote(display_name or filename)
+    response.headers["Content-Disposition"] = f"inline; filename*=UTF-8''{safe_name}"
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@app.route("/archivo/<int:material_id>")
+def material_file(material_id: int):
+    db = get_db()
+    material = db.execute("SELECT * FROM materials WHERE id = ?", (material_id,)).fetchone()
+    if material is None or not material["filename"]:
+        abort(404)
+    # Entrega el archivo solo en modo visualización. No genera enlaces de descarga pública.
+    return protected_inline_response(material["filename"], material["original_filename"] or material["filename"])
+
+
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename: str):
-    return send_from_directory(UPLOAD_DIR, filename)
+    # Esta ruta queda reservada para logos. Los materiales públicos se sirven por /archivo/<id>
+    # para evitar enlaces directos de descarga por nombre de archivo.
+    logo_filename = get_setting("logo_filename")
+    if logo_filename and filename == logo_filename:
+        return protected_inline_response(filename, filename)
+    abort(403)
 
 
 @app.route("/admin", methods=["GET", "POST"])
@@ -608,31 +691,65 @@ def admin_upload():
         new_topic_title = request.form.get("new_topic_title", "").strip()
         new_topic_description = request.form.get("new_topic_description", "").strip()
         file = request.files.get("file")
+        external_url = request.form.get("external_url", "").strip()
+        text_body = request.form.get("text_body", "").strip()
 
-        if not title or kind not in KIND_LABELS or not file or file.filename == "":
-            flash("Completa título, tipo y archivo.", "warning")
+        if not title or kind not in KIND_LABELS:
+            flash("Completa título y tipo de contenido.", "warning")
             return redirect(url_for("admin_upload"))
 
-        if not allowed_file(file.filename):
-            flash("Formato no permitido. Usa PDF, DOCX/DOC, PPTX/PPT, audio o video compatible.", "danger")
-            return redirect(url_for("admin_upload"))
+        stored_name = ""
+        html_filename = None
+        original_filename = ""
+        ext = ""
+        mime_type = ""
 
-        ext = file_extension(file.filename)
-        error = validate_file_kind(kind, ext)
-        if error:
-            flash(error, "warning")
-            return redirect(url_for("admin_upload"))
+        if kind in {"guia", "presentacion", "podcast", "video"}:
+            if not file or file.filename == "":
+                flash("Este tipo de contenido necesita un archivo.", "warning")
+                return redirect(url_for("admin_upload"))
+            if not allowed_file(file.filename):
+                flash("Formato no permitido. Usa PDF, DOCX/DOC, PPTX/PPT, audio o video compatible.", "danger")
+                return redirect(url_for("admin_upload"))
+            ext = file_extension(file.filename)
+            error = validate_file_kind(kind, ext)
+            if error:
+                flash(error, "warning")
+                return redirect(url_for("admin_upload"))
+            stored_name = unique_filename(file.filename)
+            saved_path = UPLOAD_DIR / stored_name
+            file.save(saved_path)
+            html_filename = generate_docx_html(saved_path, stored_name) if ext == "docx" else None
+            original_filename = file.filename
+            mime_type = file.mimetype
 
-        stored_name = unique_filename(file.filename)
-        saved_path = UPLOAD_DIR / stored_name
-        file.save(saved_path)
-        html_filename = generate_docx_html(saved_path, stored_name) if ext == "docx" else None
+        elif kind == "youtube":
+            if not youtube_embed_url(external_url):
+                flash("Pega un enlace válido de YouTube.", "warning")
+                return redirect(url_for("admin_upload"))
+            original_filename = "YouTube"
+            ext = "youtube"
+
+        elif kind == "soundcloud":
+            if not soundcloud_embed_url(external_url):
+                flash("Pega un enlace válido de SoundCloud.", "warning")
+                return redirect(url_for("admin_upload"))
+            original_filename = "SoundCloud"
+            ext = "soundcloud"
+
+        elif kind == "texto":
+            if not text_body:
+                flash("El contenido de texto no puede quedar vacío.", "warning")
+                return redirect(url_for("admin_upload"))
+            original_filename = "Texto"
+            ext = "texto"
+
         topic_id = resolve_topic(db, topic_id_raw, new_topic_title, new_topic_description)
 
         db.execute(
             """
-            INSERT INTO materials(topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO materials(topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, external_url, text_body, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 topic_id,
@@ -641,9 +758,11 @@ def admin_upload():
                 kind,
                 stored_name,
                 html_filename,
-                file.filename,
+                original_filename,
                 ext,
-                file.mimetype,
+                mime_type,
+                external_url,
+                text_body,
                 datetime.utcnow().isoformat(timespec="seconds"),
             ),
         )

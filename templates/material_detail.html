@@ -10,53 +10,128 @@
   {% endif %}
 </section>
 
-<section class="viewer-panel parchment-panel">
-  {% set file_url = url_for('uploaded_file', filename=material.filename) %}
-  {% set lower_name = material.filename.lower() %}
+<section class="viewer-panel parchment-panel protected-content" oncontextmenu="return false">
+  {% set file_url = url_for('material_file', material_id=material.id) if material.filename else '' %}
+  {% set lower_name = material.filename.lower() if material.filename else '' %}
+
+  <div class="protected-note">
+    <strong>Modo lectura:</strong> este material está configurado para visualizarse dentro del sitio. No se muestran botones de descarga pública.
+  </div>
 
   {% if material.kind in ['guia', 'presentacion'] and lower_name.endswith('.pdf') %}
     <div class="viewer-actions">
       <a class="btn primary" href="{{ url_for('pdf_viewer', material_id=material.id) }}">Abrir visor interactivo</a>
-      <a class="btn secondary" href="{{ file_url }}" target="_blank" rel="noopener">Abrir PDF en nueva pestaña</a>
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
     </div>
-    <iframe class="pdf-frame" src="{{ file_url }}#toolbar=1" title="Visor PDF"></iframe>
+    <iframe class="pdf-frame protected-frame" src="{{ file_url }}#toolbar=0&navpanes=0&scrollbar=1" title="Visor PDF" loading="lazy"></iframe>
 
   {% elif material.kind == 'guia' and docx_html %}
-    <div class="viewer-actions">
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar Word original</a>
-      <a class="btn secondary" href="{{ office_viewer_url(file_url_external) }}" target="_blank" rel="noopener">Abrir en visor Office</a>
-    </div>
-    <div class="reading-shell">
+    <div class="reading-shell protected-reading">
       {{ docx_html|safe }}
     </div>
 
   {% elif ext in ['doc', 'docx', 'ppt', 'pptx'] %}
     <div class="viewer-actions">
-      <a class="btn primary" href="{{ office_viewer_url(file_url_external) }}" target="_blank" rel="noopener">Abrir visor Office</a>
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
+      <span class="hint viewer-note">Vista incrustada con visor Office. Para mayor control de descarga en presentaciones, exporta también una copia PDF.</span>
     </div>
-    <iframe class="office-frame" src="{{ office_viewer_url(file_url_external) }}" title="Visor Office"></iframe>
+    <iframe class="office-frame protected-frame" src="{{ office_viewer_url(file_url_external) }}" title="Visor Office" loading="lazy"></iframe>
     <p class="hint viewer-note">El visor Office funciona correctamente cuando la página ya está desplegada públicamente en Render. En local puede no cargar porque el archivo no es accesible desde internet.</p>
 
   {% elif material.kind == 'podcast' %}
     <div class="audio-box">
       <h2>Reproductor de podcast</h2>
-      <audio controls preload="metadata" src="{{ file_url }}"></audio>
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar episodio</a>
+      <audio class="tracked-media" controls controlsList="nodownload noplaybackrate" preload="metadata" src="{{ file_url }}" oncontextmenu="return false"></audio>
+      <div class="media-progress-panel" aria-label="Avance de reproducción">
+        <div class="media-progress-top">
+          <span>Avance</span>
+          <span class="media-time">00:00 / 00:00</span>
+        </div>
+        <div class="media-progress-track">
+          <div class="media-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+  {% elif material.kind == 'soundcloud' %}
+    <div class="audio-box embed-box">
+      <h2>Reproductor de SoundCloud</h2>
+      <iframe class="soundcloud-frame" scrolling="no" frameborder="no" allow="autoplay" src="{{ soundcloud_embed_url(material.external_url) }}"></iframe>
     </div>
 
   {% elif material.kind == 'video' %}
     <div class="video-box">
       <h2>Reproductor de video</h2>
-      <video controls preload="metadata" src="{{ file_url }}"></video>
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar video</a>
+      <video class="tracked-media" controls controlsList="nodownload noplaybackrate noremoteplayback" disablepictureinpicture preload="metadata" src="{{ file_url }}" oncontextmenu="return false"></video>
+      <div class="media-progress-panel" aria-label="Avance de reproducción">
+        <div class="media-progress-top">
+          <span>Avance</span>
+          <span class="media-time">00:00 / 00:00</span>
+        </div>
+        <div class="media-progress-track">
+          <div class="media-progress-fill"></div>
+        </div>
+      </div>
     </div>
 
-  {% else %}
-    <div class="viewer-actions">
-      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
+  {% elif material.kind == 'youtube' %}
+    <div class="video-box embed-box">
+      <h2>Reproductor de YouTube</h2>
+      <iframe class="youtube-frame" src="{{ youtube_embed_url(material.external_url) }}" title="Video de YouTube" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
     </div>
+
+  {% elif material.kind == 'texto' %}
+    <article class="reading-shell text-article protected-reading">
+      {{ material.text_body|replace('\n', '<br>')|safe }}
+    </article>
+
+  {% else %}
+    <p class="hint">Este material no tiene una vista previa disponible.</p>
   {% endif %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '00:00';
+    const total = Math.floor(seconds);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const sec = total % 60;
+    if (h > 0) {
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  document.querySelectorAll('.tracked-media').forEach(function (media) {
+    const panel = media.parentElement.querySelector('.media-progress-panel');
+    if (!panel) return;
+    const fill = panel.querySelector('.media-progress-fill');
+    const time = panel.querySelector('.media-time');
+    const track = panel.querySelector('.media-progress-track');
+
+    function update() {
+      const duration = media.duration || 0;
+      const current = media.currentTime || 0;
+      const pct = duration ? Math.min(100, Math.max(0, (current / duration) * 100)) : 0;
+      fill.style.width = pct.toFixed(2) + '%';
+      time.textContent = formatTime(current) + ' / ' + formatTime(duration);
+    }
+
+    ['loadedmetadata', 'durationchange', 'timeupdate', 'seeked', 'play', 'pause'].forEach(function (eventName) {
+      media.addEventListener(eventName, update);
+    });
+
+    track.addEventListener('click', function (event) {
+      if (!media.duration) return;
+      const rect = track.getBoundingClientRect();
+      const ratio = (event.clientX - rect.left) / rect.width;
+      media.currentTime = Math.min(media.duration, Math.max(0, ratio * media.duration));
+    });
+
+    update();
+  });
+})();
+</script>
 {% endblock %}

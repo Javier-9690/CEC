@@ -12,7 +12,6 @@ Aplicación web Flask preparada para Render.com. Permite publicar contenido de e
 - Visor interactivo propio para PDF con avance de páginas y zoom.
 - Visor Office para DOC, DOCX, PPT y PPTX cuando el sitio está publicado en internet.
 - Podcast con reproductor de audio.
-- Videos con reproductor web integrado.
 - Reseñas asociables a temas.
 - Panel de administración protegido por clave.
 - Carga de logo PNG/JPG/WEBP/SVG desde el panel.
@@ -25,7 +24,6 @@ Aplicación web Flask preparada para Render.com. Permite publicar contenido de e
 | Guía de estudio | PDF, DOC, DOCX |
 | Presentación | PDF, PPT, PPTX |
 | Podcast | MP3, WAV, M4A, OGG |
-| Video | MP4, WEBM, OGV, MOV |
 | Logo | PNG, JPG, JPEG, WEBP, SVG |
 
 ## Ejecución local
@@ -73,11 +71,11 @@ Hay dos opciones:
 1. Desde la web: entra a `/admin`, luego al panel, sección **Identidad visual**, y sube el logo en PNG.
 2. Como logo base del proyecto: reemplaza el archivo `static/img/logo_cec.png` antes de subir el repositorio.
 
-Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`, con fondo transparente y visualmente integrado al color pergamino. Además, el CSS usa mezcla visual para que los logos con fondo blanco se integren mejor al fondo.
+Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`.
 
 ## Organización por tema
 
-Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast, video o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
+Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
 
 Cada tema tendrá una URL pública con todos sus materiales asociados.
 
@@ -89,3 +87,8 @@ Los navegadores no muestran de forma nativa archivos Word o PowerPoint como un P
 - DOC, DOCX, PPT, PPTX: se ofrecen mediante visor Office embebido cuando la app está desplegada públicamente en Render.
 
 Para presentaciones con máxima estabilidad visual, exporta también una copia en PDF y súbela como presentación.
+
+
+## Barra de avance
+
+Esta versión incluye una barra de avance al subir archivos desde el panel de administración. La barra muestra el porcentaje y el volumen cargado, especialmente útil para audios, videos y PDF pesados. También agrega una barra visual de reproducción para audios y videos subidos directamente al sitio.

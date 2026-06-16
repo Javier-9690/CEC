@@ -10,7 +10,10 @@
   <p>Usa los controles para avanzar por la presentación, ajustar zoom o abrir pantalla completa.</p>
 </section>
 
-<section class="interactive-viewer parchment-panel" data-pdf-url="{{ url_for('uploaded_file', filename=material.filename) }}">
+<section class="interactive-viewer parchment-panel protected-content" data-pdf-url="{{ url_for('material_file', material_id=material.id) }}" oncontextmenu="return false">
+  <div class="protected-note">
+    <strong>Modo lectura:</strong> el visor no incluye botón de descarga. El contenido se muestra dentro del sitio.
+  </div>
   <div class="pdf-toolbar">
     <button id="prevPage" class="btn small secondary">Anterior</button>
     <span>Página <strong id="pageNum">1</strong> / <strong id="pageCount">?</strong></span>
@@ -23,7 +26,7 @@
     <canvas id="pdfCanvas"></canvas>
   </div>
   <noscript>
-    <p>Activa JavaScript para usar el visor interactivo. También puedes abrir el PDF desde el material.</p>
+    <p>Activa JavaScript para usar el visor interactivo.</p>
   </noscript>
 </section>
 <script src="{{ url_for('static', filename='js/pdf_viewer.js') }}"></script>

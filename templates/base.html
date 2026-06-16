@@ -55,5 +55,25 @@
       <p>{{ site_name }} · Guías Word/PDF, presentaciones, podcast, videos y reseñas organizadas por tema.</p>
     </footer>
   </div>
+
+  <script>
+    // Medidas disuasivas: el navegador necesita recibir el contenido para mostrarlo,
+    // pero esta capa evita acciones simples de descarga desde la interfaz.
+    document.addEventListener('contextmenu', function (event) {
+      if (event.target.closest('.protected-content, .protected-frame, video, audio, canvas')) {
+        event.preventDefault();
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      const key = (event.key || '').toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && ['s', 'p'].includes(key)) {
+        const protectedArea = document.querySelector('.protected-content');
+        if (protectedArea) {
+          event.preventDefault();
+        }
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
