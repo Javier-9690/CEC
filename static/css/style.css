@@ -398,20 +398,28 @@ audio {
 
 .canvas-wrap {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 560px;
   display: grid;
   place-items: start center;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 16px;
   background: rgba(47, 36, 24, .08);
   border-radius: 18px;
   border: 1px solid rgba(92, 66, 35, .45);
+  contain: layout paint;
 }
 
 #pdfCanvas {
+  display: block;
   background: white;
   box-shadow: 0 10px 30px rgba(0,0,0,.18);
   max-width: none;
+  user-select: none;
+  touch-action: pan-x pan-y;
 }
 
 .pdf-toolbar {
@@ -421,6 +429,12 @@ audio {
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
+}
+
+.pdf-status {
+  color: var(--accent-dark);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .podcast-list {
@@ -563,7 +577,34 @@ code {
   .brand-text small { display: none; }
   .hero { padding: 24px; }
   .stats-grid { grid-template-columns: 1fr; }
-  .canvas-wrap { min-height: 420px; }
+  .viewer-panel,
+  .interactive-viewer { padding: 10px; border-radius: 16px; overflow: hidden; }
+  .protected-note { font-size: .86rem; padding: .7rem .8rem; }
+  .pdf-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .pdf-toolbar .btn {
+    width: 100%;
+    min-width: 0;
+    padding: 9px 8px;
+    font-size: .82rem;
+  }
+  .pdf-status {
+    grid-column: 1 / -1;
+    order: -1;
+    text-align: center;
+    padding: 4px 0;
+  }
+  #fullscreen { grid-column: 1 / -1; }
+  .canvas-wrap {
+    min-height: auto;
+    max-height: 72vh;
+    padding: 8px;
+    border-radius: 14px;
+  }
+  .pdf-frame { height: 72vh; border-radius: 14px; }
 }
 
 /* --- Extensión CEC: temas, Word, PPT y logo institucional --- */
@@ -827,4 +868,20 @@ code {
 button[disabled] {
   opacity: .72;
   cursor: progress;
+}
+
+
+.interactive-viewer:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  border-radius: 0;
+  padding: 12px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 248, 220, 0.95), transparent 34rem),
+    linear-gradient(135deg, #c9a35e 0%, #f2dfad 42%, #b58a45 100%);
+}
+
+.interactive-viewer:fullscreen .canvas-wrap {
+  max-height: calc(100vh - 140px);
 }

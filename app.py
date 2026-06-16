@@ -31,18 +31,41 @@ ALLOWED_EXTENSIONS = {
     "pdf",
     "doc", "docx",
     "ppt", "pptx",
-    "mp3", "wav", "m4a", "ogg",
+    "mp3", "wav", "m4a", "aac", "ogg",
     "mp4", "webm", "ogv", "mov",
     "png", "jpg", "jpeg", "webp", "gif",
 }
 LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "svg"}
-AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "ogg"}
+AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "aac", "ogg"}
 VIDEO_EXTENSIONS = {"mp4", "webm", "ogv", "mov"}
 WORD_EXTENSIONS = {"doc", "docx"}
 PRESENTATION_EXTENSIONS = {"pdf", "ppt", "pptx"}
 PDF_EXTENSIONS = {"pdf"}
 OFFICE_VIEWER_EXTENSIONS = {"doc", "docx", "ppt", "pptx"}
 PDF_VIEWER_KINDS = {"guia", "presentacion"}
+
+MIME_TYPES_BY_EXT = {
+    "pdf": "application/pdf",
+    "doc": "application/msword",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "ppt": "application/vnd.ms-powerpoint",
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "mp3": "audio/mpeg",
+    "wav": "audio/wav",
+    "m4a": "audio/mp4",
+    "aac": "audio/aac",
+    "ogg": "audio/ogg",
+    "mp4": "video/mp4",
+    "webm": "video/webm",
+    "ogv": "video/ogg",
+    "mov": "video/quicktime",
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+    "gif": "image/gif",
+    "svg": "image/svg+xml",
+}
 
 KIND_LABELS = {
     "guia": "Guía de estudio",
@@ -57,7 +80,7 @@ KIND_LABELS = {
 KIND_HELP = {
     "guia": "Acepta PDF, DOC o DOCX. Si subes DOCX, la guía se transforma a una lectura web con tablas.",
     "presentacion": "Acepta PDF, PPT o PPTX. Los PDF usan visor propio; los PPT/PPTX se abren con visor Office cuando el sitio está público.",
-    "podcast": "Acepta MP3, WAV, M4A u OGG.",
+    "podcast": "Acepta MP3, WAV, M4A, AAC u OGG.",
     "soundcloud": "Pega un enlace de SoundCloud para escucharlo dentro de la página, sin subir audio al servidor.",
     "video": "Acepta MP4, WEBM, OGV o MOV. Se reproduce directamente en la página del tema.",
     "youtube": "Pega un enlace de YouTube para reproducirlo dentro de la página, sin subir video al servidor.",
@@ -277,7 +300,7 @@ def validate_file_kind(kind: str, ext: str) -> Optional[str]:
     if kind == "presentacion" and ext not in PRESENTATION_EXTENSIONS:
         return "Las presentaciones deben ser PDF, PPT o PPTX."
     if kind == "podcast" and ext not in AUDIO_EXTENSIONS:
-        return "Los podcasts deben ser MP3, WAV, M4A u OGG."
+        return "Los podcasts deben ser MP3, WAV, M4A, AAC u OGG."
     if kind == "video" and ext not in VIDEO_EXTENSIONS:
         return "Los videos deben ser MP4, WEBM, OGV o MOV."
     return None
@@ -594,11 +617,19 @@ def reviews():
 
 
 def protected_inline_response(filename: str, display_name: str = ""):
-    response = send_from_directory(UPLOAD_DIR, filename, as_attachment=False)
+    ext = file_extension(filename)
+    response = send_from_directory(
+        UPLOAD_DIR,
+        filename,
+        as_attachment=False,
+        mimetype=MIME_TYPES_BY_EXT.get(ext),
+        conditional=True,
+    )
     safe_name = quote(display_name or filename)
     response.headers["Content-Disposition"] = f"inline; filename*=UTF-8''{safe_name}"
     response.headers["Cache-Control"] = "no-store, max-age=0"
     response.headers["Pragma"] = "no-cache"
+    response.headers["Accept-Ranges"] = "bytes"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 

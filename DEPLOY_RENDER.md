@@ -77,3 +77,8 @@ Esta versión ya trae el logo CEC como logo base. El panel sirve para reemplazar
 ## Barra de avance
 
 Esta versión incluye una barra de avance al subir archivos desde el panel de administración. La barra muestra el porcentaje y el volumen cargado, especialmente útil para audios, videos y PDF pesados. También agrega una barra visual de reproducción para audios y videos subidos directamente al sitio.
+
+
+## Corrección móvil del visor PDF
+
+Esta versión ajusta automáticamente el tamaño de las páginas PDF al ancho real del celular. El visor interactivo ya no fuerza un canvas más ancho que la pantalla, por lo que mantiene la estética pergamino, evita desbordes laterales y conserva los controles de navegación, zoom y pantalla completa.

@@ -6,6 +6,7 @@
 
   const url = viewer.dataset.pdfUrl;
   viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+
   const canvas = document.getElementById('pdfCanvas');
   const ctx = canvas.getContext('2d');
   const pageNumEl = document.getElementById('pageNum');
@@ -15,30 +16,71 @@
   const zoomOutBtn = document.getElementById('zoomOut');
   const zoomInBtn = document.getElementById('zoomIn');
   const fullscreenBtn = document.getElementById('fullscreen');
+  const canvasWrap = document.querySelector('.canvas-wrap');
 
   let pdfDoc = null;
   let pageNum = 1;
   let pageRendering = false;
   let pageNumPending = null;
-  let scale = 1.15;
+  let zoomFactor = 1;
+  let resizeTimer = null;
+
+  function availableWidth() {
+    if (!canvasWrap) return window.innerWidth - 24;
+    const styles = window.getComputedStyle(canvasWrap);
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = parseFloat(styles.paddingRight) || 0;
+    return Math.max(240, canvasWrap.clientWidth - paddingLeft - paddingRight - 2);
+  }
+
+  function getFitScale(page) {
+    const baseViewport = page.getViewport({ scale: 1 });
+    const fit = availableWidth() / baseViewport.width;
+    const desktopCap = window.innerWidth >= 900 ? 1.65 : 1.15;
+    return Math.min(desktopCap, Math.max(0.35, fit)) * zoomFactor;
+  }
 
   function renderPage(num) {
+    if (!pdfDoc) return;
     pageRendering = true;
+
     pdfDoc.getPage(num).then(function (page) {
+      const scale = getFitScale(page);
       const viewport = page.getViewport({ scale: scale });
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      const renderContext = { canvasContext: ctx, viewport: viewport };
+      const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = Math.floor(viewport.width) + 'px';
+      canvas.style.height = Math.floor(viewport.height) + 'px';
+
+      const transform = outputScale !== 1
+        ? [outputScale, 0, 0, outputScale, 0, 0]
+        : null;
+
+      const renderContext = {
+        canvasContext: ctx,
+        transform: transform,
+        viewport: viewport
+      };
+
       const renderTask = page.render(renderContext);
-      renderTask.promise.then(function () {
+      return renderTask.promise.then(function () {
         pageRendering = false;
+        pageNumEl.textContent = num;
+        if (canvasWrap && zoomFactor <= 1.03) {
+          canvasWrap.scrollLeft = 0;
+        }
         if (pageNumPending !== null) {
-          renderPage(pageNumPending);
+          const pending = pageNumPending;
           pageNumPending = null;
+          renderPage(pending);
         }
       });
+    }).catch(function () {
+      pageRendering = false;
+      viewer.insertAdjacentHTML('beforeend', '<p class="hint">No se pudo renderizar esta página del PDF.</p>');
     });
-    pageNumEl.textContent = num;
   }
 
   function queueRenderPage(num) {
@@ -62,7 +104,7 @@
   }
 
   function updateZoom(delta) {
-    scale = Math.min(2.5, Math.max(0.5, scale + delta));
+    zoomFactor = Math.min(2.4, Math.max(0.65, zoomFactor + delta));
     queueRenderPage(pageNum);
   }
 
@@ -70,9 +112,20 @@
   nextBtn.addEventListener('click', onNextPage);
   zoomOutBtn.addEventListener('click', function () { updateZoom(-0.15); });
   zoomInBtn.addEventListener('click', function () { updateZoom(0.15); });
+
   fullscreenBtn.addEventListener('click', function () {
-    const element = viewer;
-    if (element.requestFullscreen) element.requestFullscreen();
+    if (viewer.requestFullscreen) {
+      viewer.requestFullscreen();
+    } else if (viewer.webkitRequestFullscreen) {
+      viewer.webkitRequestFullscreen();
+    }
+  });
+
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (pdfDoc) queueRenderPage(pageNum);
+    }, 180);
   });
 
   document.addEventListener('keydown', function (event) {

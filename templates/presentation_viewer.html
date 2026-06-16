@@ -7,7 +7,7 @@
 <section class="page-title parchment-panel compact">
   <p class="eyebrow">Visor interactivo</p>
   <h1>{{ material.title }}</h1>
-  <p>Usa los controles para avanzar por la presentación, ajustar zoom o abrir pantalla completa.</p>
+  <p>Usa los controles para avanzar, ajustar zoom o abrir pantalla completa.</p>
 </section>
 
 <section class="interactive-viewer parchment-panel protected-content" data-pdf-url="{{ url_for('material_file', material_id=material.id) }}" oncontextmenu="return false">
@@ -16,7 +16,7 @@
   </div>
   <div class="pdf-toolbar">
     <button id="prevPage" class="btn small secondary">Anterior</button>
-    <span>Página <strong id="pageNum">1</strong> / <strong id="pageCount">?</strong></span>
+    <span class="pdf-status">Página <strong id="pageNum">1</strong> / <strong id="pageCount">?</strong></span>
     <button id="nextPage" class="btn small secondary">Siguiente</button>
     <button id="zoomOut" class="btn small secondary">−</button>
     <button id="zoomIn" class="btn small secondary">+</button>
