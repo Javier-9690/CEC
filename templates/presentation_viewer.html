@@ -10,9 +10,9 @@
   <p>Usa los controles para avanzar, ajustar zoom o abrir pantalla completa.</p>
 </section>
 
-<section class="interactive-viewer parchment-panel protected-content" data-pdf-url="{{ url_for('material_file', material_id=material.id) }}" oncontextmenu="return false">
+<section class="interactive-viewer parchment-panel protected-content" data-pdf-url="{{ url_for('material_file', material_id=material.id) }}" data-watermark="{{ site_name }}" oncontextmenu="return false">
   <div class="protected-note">
-    <strong>Modo lectura:</strong> el visor no incluye botón de descarga. El contenido se muestra dentro del sitio.
+    <strong>Modo lectura protegido:</strong> el visor no incluye botón de descarga, bloquea copia simple y aplica marca de agua disuasiva. Las capturas de pantalla no pueden impedirse totalmente desde un navegador.
   </div>
   <div class="pdf-toolbar">
     <button id="prevPage" class="btn small secondary">Anterior</button>
@@ -22,7 +22,8 @@
     <button id="zoomIn" class="btn small secondary">+</button>
     <button id="fullscreen" class="btn small primary">Pantalla completa</button>
   </div>
-  <div class="canvas-wrap">
+  <div class="canvas-wrap watermark-zone">
+    <div class="watermark-layer" aria-hidden="true">{{ site_name }}</div>
     <canvas id="pdfCanvas"></canvas>
   </div>
   <noscript>

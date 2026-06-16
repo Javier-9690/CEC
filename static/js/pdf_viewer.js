@@ -5,6 +5,7 @@
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
   const url = viewer.dataset.pdfUrl;
+  const watermarkText = viewer.dataset.watermark || "Uso protegido";
   viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
   const canvas = document.getElementById('pdfCanvas');
@@ -64,8 +65,26 @@
         viewport: viewport
       };
 
+      function drawCanvasWatermark() {
+        const text = watermarkText;
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#6f1d1b';
+        ctx.font = Math.max(28, Math.floor(canvas.width / 18)) + 'px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(-Math.PI / 6);
+        const gapY = Math.max(170, canvas.height / 5);
+        for (let y = -canvas.height; y <= canvas.height; y += gapY) {
+          ctx.fillText(text, 0, y);
+        }
+        ctx.restore();
+      }
+
       const renderTask = page.render(renderContext);
       return renderTask.promise.then(function () {
+        drawCanvasWatermark();
         pageRendering = false;
         pageNumEl.textContent = num;
         if (canvasWrap && zoomFactor <= 1.03) {
@@ -132,7 +151,7 @@
     if (event.key === 'ArrowLeft') onPrevPage();
     if (event.key === 'ArrowRight') onNextPage();
     const key = (event.key || '').toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && ['s', 'p'].includes(key)) {
+    if ((event.ctrlKey || event.metaKey) && ['s', 'p', 'c', 'a', 'u'].includes(key)) {
       event.preventDefault();
     }
   });

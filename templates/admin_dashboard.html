@@ -4,10 +4,12 @@
 <section class="page-title parchment-panel compact">
   <p class="eyebrow">Administración</p>
   <h1>Panel de contenido</h1>
-  <p>Sube materiales, crea temas, cambia el logo, define el nombre del sitio y publica reseñas.</p>
+  <p>Sube materiales, crea temas, cambia el logo, publica reseñas, crea posts y administra suscriptores.</p>
   <div class="viewer-actions">
     <a class="btn primary" href="{{ url_for('admin_upload') }}">Subir material</a>
     <a class="btn secondary" href="{{ url_for('admin_review_new') }}">Nueva reseña</a>
+    <a class="btn secondary" href="{{ url_for('admin_post_new') }}">Nuevo post</a>
+    <a class="btn secondary" href="{{ url_for('admin_subscribers') }}">Suscriptores: {{ subscribers_count }}</a>
   </div>
 </section>
 
@@ -77,6 +79,25 @@
       {% endfor %}
     </div>
   </article>
+</section>
+
+<section class="parchment-panel admin-card">
+  <h2>Posts recientes</h2>
+  <div class="admin-list">
+    {% for post in posts %}
+      <div class="admin-row">
+        <div>
+          <strong>{{ post.title }}</strong>
+          <small>{{ post.topic_title or 'General' }} · {{ post.created_at|date_display }}</small>
+        </div>
+        <form method="post" action="{{ url_for('admin_post_delete', post_id=post.id) }}" onsubmit="return confirm('¿Eliminar este post?');">
+          <button class="danger-link" type="submit">Eliminar</button>
+        </form>
+      </div>
+    {% else %}
+      <p class="hint">No hay posts publicados.</p>
+    {% endfor %}
+  </div>
 </section>
 
 <section class="parchment-panel admin-card">

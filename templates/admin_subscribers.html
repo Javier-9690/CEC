@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Suscriptores · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Suscripciones</p>
+  <h1>Suscriptores registrados</h1>
+  <p>Listado de correos inscritos para recibir avisos de nuevos posts.</p>
+  <div class="viewer-actions">
+    <a class="btn primary" href="{{ url_for('admin_subscribers_csv') }}">Exportar CSV</a>
+    <a class="btn secondary" href="{{ url_for('admin_dashboard') }}">Volver al panel</a>
+  </div>
+</section>
+
+<section class="parchment-panel admin-card">
+  <h2>Lista de suscriptores</h2>
+  <div class="admin-list">
+    {% for subscriber in subscribers %}
+      <div class="admin-row">
+        <div>
+          <strong>{{ subscriber.name or 'Sin nombre' }}</strong>
+          <small>{{ subscriber.email }} · {{ 'Activo' if subscriber.is_active else 'Inactivo' }} · {{ subscriber.created_at|date_display }}</small>
+        </div>
+      </div>
+    {% else %}
+      <p class="hint">Aún no hay suscriptores.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

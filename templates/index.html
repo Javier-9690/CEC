@@ -20,8 +20,23 @@
       <div><strong>{{ counts.presentacion }}</strong><span>Presentaciones</span></div>
       <div><strong>{{ counts.podcast }}</strong><span>Podcast</span></div>
       <div><strong>{{ counts.video }}</strong><span>Videos</span></div>
+      <div><strong>{{ counts.post }}</strong><span>Posts</span></div>
     </div>
   </div>
+</section>
+
+
+<section class="subscribe-band parchment-panel">
+  <div>
+    <p class="eyebrow">Suscripción</p>
+    <h2>Recibe avisos cuando publiquemos nuevos posts</h2>
+    <p>Deja tu correo para enterarte de nuevas publicaciones, reseñas y materiales asociados a los temas de estudio.</p>
+  </div>
+  <form method="post" action="{{ url_for('subscribe') }}" class="subscribe-form">
+    <input type="text" name="name" placeholder="Nombre opcional" autocomplete="name">
+    <input type="email" name="email" placeholder="Correo electrónico" autocomplete="email" required>
+    <button class="btn primary" type="submit">Suscribirme</button>
+  </form>
 </section>
 
 <section class="section-heading">
@@ -53,6 +68,25 @@
     {% include "partials/material_card.html" %}
   {% else %}
     <article class="empty-card">Aún no hay materiales publicados. Entra al panel de administración para subir el primero.</article>
+  {% endfor %}
+</div>
+
+<section class="section-heading spaced">
+  <p class="eyebrow">Posts</p>
+  <h2>Últimas publicaciones</h2>
+</section>
+
+<div class="card-grid">
+  {% for post in latest_posts %}
+    <article class="content-card parchment-panel protected-card">
+      <p class="card-kicker">Post{% if post.topic_title %} · {{ post.topic_title }}{% endif %}</p>
+      <h3>{{ post.title }}</h3>
+      <p>{{ post.body[:190] }}{% if post.body|length > 190 %}...{% endif %}</p>
+      <div class="card-meta">{{ post.created_at|date_display }}</div>
+      <a class="text-link" href="{{ url_for('post_detail', post_id=post.id) }}">Leer post</a>
+    </article>
+  {% else %}
+    <article class="empty-card">Aún no hay posts publicados.</article>
   {% endfor %}
 </div>
 

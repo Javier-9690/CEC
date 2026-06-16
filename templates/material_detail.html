@@ -15,7 +15,7 @@
   {% set lower_name = material.filename.lower() if material.filename else '' %}
 
   <div class="protected-note">
-    <strong>Modo lectura:</strong> este material está configurado para visualizarse dentro del sitio. No se muestran botones de descarga pública.
+    <strong>Modo lectura protegido:</strong> no se muestran botones de descarga pública y se bloquea la copia simple del texto visible. Las capturas de pantalla no pueden impedirse totalmente desde un navegador.
   </div>
 
   {% if material.kind in ['guia', 'presentacion'] and lower_name.endswith('.pdf') %}
@@ -25,7 +25,8 @@
     <iframe class="pdf-frame protected-frame" src="{{ file_url }}#toolbar=0&navpanes=0&scrollbar=1" title="Visor PDF" loading="lazy"></iframe>
 
   {% elif material.kind == 'guia' and docx_html %}
-    <div class="reading-shell protected-reading">
+    <div class="reading-shell protected-reading watermark-zone">
+      <div class="watermark-layer" aria-hidden="true">{{ site_name }}</div>
       {{ docx_html|safe }}
     </div>
 
@@ -79,7 +80,8 @@
     </div>
 
   {% elif material.kind == 'texto' %}
-    <article class="reading-shell text-article protected-reading">
+    <article class="reading-shell text-article protected-reading watermark-zone">
+      <div class="watermark-layer" aria-hidden="true">{{ site_name }}</div>
       {{ material.text_body|replace('\n', '<br>')|safe }}
     </article>
 

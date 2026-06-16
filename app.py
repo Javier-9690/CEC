@@ -1,8 +1,12 @@
+import csv
+import io
 import os
 import secrets
+import smtplib
 import sqlite3
 import unicodedata
 from datetime import datetime
+from email.message import EmailMessage
 from functools import wraps
 from pathlib import Path
 from typing import Optional
@@ -18,6 +22,7 @@ from flask import (
     request,
     send_from_directory,
     session,
+    Response,
     url_for,
 )
 from werkzeug.utils import secure_filename
@@ -175,6 +180,22 @@ def init_db():
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS subscribers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT NOT NULL UNIQUE,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic_id INTEGER,
+            title TEXT NOT NULL,
+            body TEXT NOT NULL,
+            created_at TEXT NOT NULL
         );
         """
     )
@@ -466,11 +487,89 @@ def review_query(where: str = "", params: tuple = (), limit: Optional[int] = Non
     return db.execute(sql, params).fetchall()
 
 
+def post_query(where: str = "", params: tuple = (), limit: Optional[int] = None):
+    db = get_db()
+    sql = """
+        SELECT p.*, t.title AS topic_title, t.slug AS topic_slug
+        FROM posts p
+        LEFT JOIN topics t ON t.id = p.topic_id
+    """
+    if where:
+        sql += " WHERE " + where
+    sql += " ORDER BY datetime(p.created_at) DESC"
+    if limit:
+        sql += f" LIMIT {int(limit)}"
+    return db.execute(sql, params).fetchall()
+
+
+def notify_subscribers(post_id: int) -> tuple[int, str]:
+    """Envía un aviso por SMTP si las variables de correo están configuradas."""
+    host = os.environ.get("SMTP_HOST", "").strip()
+    user = os.environ.get("SMTP_USER", "").strip()
+    password = os.environ.get("SMTP_PASSWORD", "").strip()
+    sender = os.environ.get("MAIL_FROM", user).strip()
+    if not host or not sender:
+        return 0, "SMTP no configurado. El post quedó publicado y los suscriptores pueden exportarse desde el panel."
+
+    try:
+        port = int(os.environ.get("SMTP_PORT", "587"))
+    except ValueError:
+        port = 587
+
+    db = get_db()
+    post = db.execute(
+        """
+        SELECT p.*, t.title AS topic_title
+        FROM posts p
+        LEFT JOIN topics t ON t.id = p.topic_id
+        WHERE p.id = ?
+        """,
+        (post_id,),
+    ).fetchone()
+    subscribers = db.execute(
+        "SELECT email, COALESCE(name, '') AS name FROM subscribers WHERE is_active = 1 ORDER BY email"
+    ).fetchall()
+    if post is None or not subscribers:
+        return 0, "No hay suscriptores activos para notificar."
+
+    post_url = url_for("post_detail", post_id=post_id, _external=True)
+    site_name = get_setting("site_name") or "Centro de Estudios Católicos"
+    sent = 0
+
+    try:
+        with smtplib.SMTP(host, port, timeout=20) as smtp:
+            if os.environ.get("SMTP_USE_TLS", "1") != "0":
+                smtp.starttls()
+            if user and password:
+                smtp.login(user, password)
+            for subscriber in subscribers:
+                msg = EmailMessage()
+                msg["Subject"] = f"Nueva publicación: {post['title']}"
+                msg["From"] = sender
+                msg["To"] = subscriber["email"]
+                greeting = f"Hola {subscriber['name']}," if subscriber["name"] else "Hola,"
+                msg.set_content(
+                    f"{greeting}\n\n"
+                    f"Hay una nueva publicación en {site_name}.\n\n"
+                    f"Título: {post['title']}\n"
+                    f"Tema: {post['topic_title'] or 'General'}\n"
+                    f"Leer aquí: {post_url}\n\n"
+                    "Recibes este correo porque te suscribiste desde la página web."
+                )
+                smtp.send_message(msg)
+                sent += 1
+    except Exception as exc:
+        return sent, f"No se pudo completar el envío SMTP: {exc}"
+
+    return sent, f"Notificación enviada a {sent} suscriptores."
+
+
 @app.route("/")
 def index():
     db = get_db()
     latest_materials = material_query(limit=6)
     latest_reviews = review_query(limit=3)
+    latest_posts = post_query(limit=3)
     topics = db.execute(
         """
         SELECT t.*, COUNT(m.id) AS material_count
@@ -488,12 +587,15 @@ def index():
         "video": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind IN ('video','youtube')").fetchone()["c"],
         "texto": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='texto'").fetchone()["c"],
         "resena": db.execute("SELECT COUNT(*) AS c FROM reviews").fetchone()["c"],
+        "post": db.execute("SELECT COUNT(*) AS c FROM posts").fetchone()["c"],
+        "suscriptor": db.execute("SELECT COUNT(*) AS c FROM subscribers WHERE is_active = 1").fetchone()["c"],
         "tema": db.execute("SELECT COUNT(*) AS c FROM topics").fetchone()["c"],
     }
     return render_template(
         "index.html",
         latest_materials=latest_materials,
         latest_reviews=latest_reviews,
+        latest_posts=latest_posts,
         topics=topics,
         counts=counts,
     )
@@ -654,6 +756,49 @@ def uploaded_file(filename: str):
     abort(403)
 
 
+@app.route("/posts")
+def posts():
+    rows = post_query()
+    return render_template("posts.html", posts=rows)
+
+
+@app.route("/post/<int:post_id>")
+def post_detail(post_id: int):
+    db = get_db()
+    post = db.execute(
+        """
+        SELECT p.*, t.title AS topic_title, t.slug AS topic_slug
+        FROM posts p
+        LEFT JOIN topics t ON t.id = p.topic_id
+        WHERE p.id = ?
+        """,
+        (post_id,),
+    ).fetchone()
+    if post is None:
+        abort(404)
+    return render_template("post_detail.html", post=post)
+
+
+@app.route("/suscribirse", methods=["POST"])
+def subscribe():
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    if not email or "@" not in email or "." not in email.rsplit("@", 1)[-1]:
+        flash("Ingresa un correo válido para suscribirte.", "warning")
+        return redirect(request.referrer or url_for("index"))
+    db = get_db()
+    db.execute(
+        """
+        INSERT INTO subscribers(name, email, is_active, created_at) VALUES (?, ?, 1, ?)
+        ON CONFLICT(email) DO UPDATE SET name=excluded.name, is_active=1
+        """,
+        (name, email, datetime.utcnow().isoformat(timespec="seconds")),
+    )
+    db.commit()
+    flash("Suscripción registrada correctamente. Recibirás avisos cuando haya nuevas publicaciones.", "success")
+    return redirect(request.referrer or url_for("index"))
+
+
 @app.route("/admin", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -673,6 +818,8 @@ def admin_dashboard():
     db = get_db()
     materials = material_query(limit=14)
     reviews_rows = review_query(limit=14)
+    posts_rows = post_query(limit=10)
+    subscribers_count = db.execute("SELECT COUNT(*) AS c FROM subscribers WHERE is_active = 1").fetchone()["c"]
     topics_rows = db.execute(
         """
         SELECT t.*,
@@ -685,7 +832,7 @@ def admin_dashboard():
         ORDER BY lower(t.title)
         """
     ).fetchall()
-    return render_template("admin_dashboard.html", materials=materials, reviews=reviews_rows, topics=topics_rows)
+    return render_template("admin_dashboard.html", materials=materials, reviews=reviews_rows, posts=posts_rows, subscribers_count=subscribers_count, topics=topics_rows)
 
 
 @app.route("/admin/topic/new", methods=["POST"])
@@ -802,6 +949,73 @@ def admin_upload():
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin_upload.html", topics=topics_rows)
+
+
+@app.route("/admin/post/new", methods=["GET", "POST"])
+@login_required
+def admin_post_new():
+    db = get_db()
+    topics_rows = db.execute("SELECT * FROM topics ORDER BY lower(title)").fetchall()
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        body = request.form.get("body", "").strip()
+        topic_id_raw = request.form.get("topic_id", "").strip()
+        new_topic_title = request.form.get("new_topic_title", "").strip()
+        new_topic_description = request.form.get("new_topic_description", "").strip()
+        notify = request.form.get("notify_subscribers") == "1"
+
+        if not title or not body:
+            flash("El post necesita título y contenido.", "warning")
+            return redirect(url_for("admin_post_new"))
+
+        topic_id = resolve_topic(db, topic_id_raw, new_topic_title, new_topic_description)
+        cursor = db.execute(
+            "INSERT INTO posts(topic_id, title, body, created_at) VALUES (?, ?, ?, ?)",
+            (topic_id, title, body, datetime.utcnow().isoformat(timespec="seconds")),
+        )
+        db.commit()
+        if notify:
+            _, message = notify_subscribers(cursor.lastrowid)
+            flash(message, "success" if "enviada" in message else "warning")
+        else:
+            flash("Post publicado correctamente.", "success")
+        return redirect(url_for("admin_dashboard"))
+    return render_template("admin_post_form.html", topics=topics_rows)
+
+
+@app.route("/admin/post/<int:post_id>/delete", methods=["POST"])
+@login_required
+def admin_post_delete(post_id: int):
+    db = get_db()
+    db.execute("DELETE FROM posts WHERE id = ?", (post_id,))
+    db.commit()
+    flash("Post eliminado.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/suscriptores")
+@login_required
+def admin_subscribers():
+    db = get_db()
+    rows = db.execute("SELECT * FROM subscribers ORDER BY datetime(created_at) DESC").fetchall()
+    return render_template("admin_subscribers.html", subscribers=rows)
+
+
+@app.route("/admin/suscriptores.csv")
+@login_required
+def admin_subscribers_csv():
+    db = get_db()
+    rows = db.execute("SELECT name, email, is_active, created_at FROM subscribers ORDER BY email").fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["nombre", "email", "activo", "fecha_suscripcion"])
+    for row in rows:
+        writer.writerow([row["name"] or "", row["email"], row["is_active"], row["created_at"]])
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=suscriptores.csv"},
+    )
 
 
 @app.route("/admin/review/new", methods=["GET", "POST"])

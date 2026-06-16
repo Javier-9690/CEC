@@ -885,3 +885,129 @@ button[disabled] {
 .interactive-viewer:fullscreen .canvas-wrap {
   max-height: calc(100vh - 140px);
 }
+
+/* Suscripción a posts */
+.subscribe-band,
+.subscribe-footer {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 520px);
+  gap: 18px;
+  align-items: center;
+  padding: 24px;
+  margin: 22px 0;
+  text-align: left;
+}
+
+.subscribe-band h2,
+.subscribe-footer h2 {
+  font-family: "Cinzel", Georgia, serif;
+  margin: 0 0 8px;
+  color: var(--accent-dark);
+}
+
+.subscribe-form {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.subscribe-form input {
+  min-width: 0;
+}
+
+.checkbox-label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 700;
+  border: 1px solid rgba(92, 66, 35, .38);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 246, 217, .55);
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+/* Protección textual y marca de agua disuasiva */
+.protected-reading,
+.protected-reading *,
+.protected-content .text-article,
+.protected-content .docx-render {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.protected-reading::selection,
+.protected-reading *::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.watermark-zone {
+  position: relative;
+  overflow: hidden;
+}
+
+.watermark-layer {
+  position: absolute;
+  inset: -20%;
+  display: grid;
+  place-items: center;
+  transform: rotate(-25deg);
+  font-family: "Cinzel", Georgia, serif;
+  font-size: clamp(2rem, 8vw, 6rem);
+  color: rgba(111, 29, 27, .10);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.protected-reading > :not(.watermark-layer),
+.canvas-wrap > canvas {
+  position: relative;
+  z-index: 3;
+}
+
+.canvas-wrap.watermark-zone .watermark-layer {
+  position: sticky;
+  top: 40%;
+  height: 0;
+  min-height: 0;
+  align-self: start;
+}
+
+.screen-guard .protected-content {
+  filter: blur(12px);
+}
+
+@media print {
+  .protected-content,
+  .interactive-viewer,
+  .viewer-panel {
+    display: none !important;
+  }
+  body::after {
+    content: "La impresión de este contenido está deshabilitada desde el sitio.";
+    display: block;
+    margin: 3rem;
+    font-size: 18pt;
+    color: #000;
+  }
+}
+
+@media (max-width: 760px) {
+  .subscribe-band,
+  .subscribe-footer,
+  .subscribe-form {
+    grid-template-columns: 1fr;
+  }
+  .subscribe-footer {
+    padding: 18px;
+  }
+}

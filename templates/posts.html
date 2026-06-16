@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Posts · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Publicaciones</p>
+  <h1>Posts recientes</h1>
+  <p>Artículos, avisos y nuevas publicaciones del centro de estudios.</p>
+</section>
+
+<div class="card-grid">
+  {% for post in posts %}
+    <article class="content-card parchment-panel protected-card">
+      <p class="card-kicker">Post{% if post.topic_title %} · {{ post.topic_title }}{% endif %}</p>
+      <h3>{{ post.title }}</h3>
+      <p>{{ post.body[:220] }}{% if post.body|length > 220 %}...{% endif %}</p>
+      <div class="card-meta">{{ post.created_at|date_display }}</div>
+      <a class="text-link" href="{{ url_for('post_detail', post_id=post.id) }}">Leer post</a>
+    </article>
+  {% else %}
+    <article class="empty-card">Aún no hay posts publicados.</article>
+  {% endfor %}
+</div>
+{% endblock %}

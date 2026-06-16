@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Post{% if post.topic_title %} · {{ post.topic_title }}{% endif %}</p>
+  <h1>{{ post.title }}</h1>
+  <p>{{ post.created_at|date_display }}</p>
+  {% if post.topic_title %}
+    <a class="filter-pill" href="{{ url_for('topic_detail', slug=post.topic_slug) }}">Ver tema completo: {{ post.topic_title }}</a>
+  {% endif %}
+</section>
+
+<section class="viewer-panel parchment-panel protected-content" oncontextmenu="return false">
+  <div class="protected-note">
+    <strong>Modo lectura:</strong> el texto está protegido contra copia simple y selección directa.
+  </div>
+  <article class="reading-shell text-article protected-reading watermark-zone">
+    <div class="watermark-layer" aria-hidden="true">{{ site_name }}</div>
+    {{ post.body|replace('\n', '<br>')|safe }}
+  </article>
+</section>
+{% endblock %}
