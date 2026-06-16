@@ -46,6 +46,13 @@
       <a class="btn secondary" href="{{ file_url }}" download>Descargar episodio</a>
     </div>
 
+  {% elif material.kind == 'video' %}
+    <div class="video-box">
+      <h2>Reproductor de video</h2>
+      <video controls preload="metadata" src="{{ file_url }}"></video>
+      <a class="btn secondary" href="{{ file_url }}" download>Descargar video</a>
+    </div>
+
   {% else %}
     <div class="viewer-actions">
       <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>

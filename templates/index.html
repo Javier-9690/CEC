@@ -5,7 +5,7 @@
   <div class="hero-content">
     <p class="eyebrow">Archivo de formación y estudio</p>
     <h1>Una biblioteca digital con espíritu tradicional.</h1>
-    <p class="hero-copy">Publica temas de estudio que reúnan guías Word con tablas, documentos PDF, presentaciones PPT/PPTX o PDF, podcast y reseñas bajo una misma unidad temática.</p>
+    <p class="hero-copy">Publica temas de estudio que reúnan guías Word con tablas, documentos PDF, presentaciones PPT/PPTX o PDF, podcast, videos y reseñas bajo una misma unidad temática.</p>
     <div class="hero-actions">
       <a class="btn primary" href="{{ url_for('topics') }}">Explorar temas</a>
       <a class="btn secondary" href="{{ url_for('library') }}">Ver biblioteca</a>
@@ -19,6 +19,7 @@
       <div><strong>{{ counts.guia }}</strong><span>Guías</span></div>
       <div><strong>{{ counts.presentacion }}</strong><span>Presentaciones</span></div>
       <div><strong>{{ counts.podcast }}</strong><span>Podcast</span></div>
+      <div><strong>{{ counts.video }}</strong><span>Videos</span></div>
     </div>
   </div>
 </section>

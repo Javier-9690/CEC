@@ -16,6 +16,7 @@
           <option value="guia">Guía de estudio: PDF, DOC, DOCX</option>
           <option value="presentacion">Presentación: PDF, PPT, PPTX</option>
           <option value="podcast">Podcast: MP3, WAV, M4A, OGG</option>
+          <option value="video">Video: MP4, WEBM, OGV, MOV</option>
         </select>
       </label>
       <label>Tema existente
@@ -42,11 +43,11 @@
       <textarea name="description" rows="5" placeholder="Breve descripción del contenido"></textarea>
     </label>
     <label>Archivo
-      <input type="file" name="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,audio/mpeg,audio/wav,audio/mp4,audio/ogg,.mp3,.wav,.m4a,.ogg">
+      <input type="file" name="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,audio/mpeg,audio/wav,audio/mp4,audio/ogg,video/mp4,video/webm,video/ogg,.mp3,.wav,.m4a,.ogg,.mp4,.webm,.ogv,.mov">
     </label>
 
     <div class="hint-box">
-      <strong>Nota:</strong> las guías DOCX se convierten a lectura web y conservan tablas básicas. Los PPT/PPTX se visualizan con visor Office cuando tu sitio ya está publicado en Render. Para máxima estabilidad, también puedes subir presentaciones exportadas a PDF.
+      <strong>Nota:</strong> las guías DOCX se convierten a lectura web y conservan tablas básicas. Los PPT/PPTX se visualizan con visor Office cuando tu sitio ya está publicado en Render. Los videos MP4/WEBM/OGV se reproducen directamente en la página. Para máxima estabilidad en presentaciones, también puedes subir una copia exportada a PDF.
     </div>
 
     <button class="btn primary" type="submit">Publicar material</button>

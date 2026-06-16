@@ -59,27 +59,29 @@ body::before {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   text-decoration: none;
   color: var(--ink);
+  min-width: 0;
 }
 
 .brand-seal {
-  width: 64px;
-  height: 64px;
+  width: 126px;
+  height: 112px;
   display: grid;
   place-items: center;
-  border: 2px solid var(--border);
-  border-radius: 50%;
-  background: linear-gradient(145deg, #fff4cf, #d8bd75);
-  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
   flex: 0 0 auto;
 }
 
 .brand-seal img {
-  width: 82%;
-  height: 82%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .brand-text strong {
@@ -247,7 +249,7 @@ body::before {
 .hero-card {
   padding: 28px;
   border: 1px solid rgba(92, 66, 35, .65);
-  background: rgba(255, 249, 226, .72);
+  background: rgba(247, 232, 191, .62);
   border-radius: 24px;
   text-align: center;
 }
@@ -366,13 +368,24 @@ body::before {
   margin-top: 16px;
 }
 
-.audio-box {
+.audio-box,
+.video-box {
   padding: 22px;
 }
 
 audio {
   width: 100%;
   margin: 12px 0;
+}
+
+.video-box video {
+  display: block;
+  width: 100%;
+  max-height: 78vh;
+  margin: 12px 0 16px;
+  border: 1px solid rgba(92, 66, 35, .5);
+  border-radius: 18px;
+  background: #1c1711;
 }
 
 .material-image {
@@ -545,7 +558,9 @@ code {
 
 @media (max-width: 560px) {
   .page-shell { width: min(100% - 18px, 1180px); }
-  .brand-seal { width: 54px; height: 54px; }
+  .brand-seal { width: 92px; height: 82px; }
+  .brand-text strong { font-size: 1rem; }
+  .brand-text small { display: none; }
   .hero { padding: 24px; }
   .stats-grid { grid-template-columns: 1fr; }
   .canvas-wrap { min-height: 420px; }
@@ -559,10 +574,11 @@ code {
 }
 
 .hero-logo {
-  width: min(230px, 82%);
-  max-height: 240px;
+  width: min(430px, 98%);
+  max-height: 470px;
   object-fit: contain;
-  filter: drop-shadow(0 12px 20px rgba(47, 36, 24, .14));
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 12px 20px rgba(47, 36, 24, .10));
 }
 
 .topic-grid {

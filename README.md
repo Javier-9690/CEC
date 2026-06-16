@@ -12,6 +12,7 @@ Aplicación web Flask preparada para Render.com. Permite publicar contenido de e
 - Visor interactivo propio para PDF con avance de páginas y zoom.
 - Visor Office para DOC, DOCX, PPT y PPTX cuando el sitio está publicado en internet.
 - Podcast con reproductor de audio.
+- Videos con reproductor web integrado.
 - Reseñas asociables a temas.
 - Panel de administración protegido por clave.
 - Carga de logo PNG/JPG/WEBP/SVG desde el panel.
@@ -24,6 +25,7 @@ Aplicación web Flask preparada para Render.com. Permite publicar contenido de e
 | Guía de estudio | PDF, DOC, DOCX |
 | Presentación | PDF, PPT, PPTX |
 | Podcast | MP3, WAV, M4A, OGG |
+| Video | MP4, WEBM, OGV, MOV |
 | Logo | PNG, JPG, JPEG, WEBP, SVG |
 
 ## Ejecución local
@@ -71,11 +73,11 @@ Hay dos opciones:
 1. Desde la web: entra a `/admin`, luego al panel, sección **Identidad visual**, y sube el logo en PNG.
 2. Como logo base del proyecto: reemplaza el archivo `static/img/logo_cec.png` antes de subir el repositorio.
 
-Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`.
+Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`, con fondo transparente y visualmente integrado al color pergamino. Además, el CSS usa mezcla visual para que los logos con fondo blanco se integren mejor al fondo.
 
 ## Organización por tema
 
-Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
+Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast, video o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
 
 Cada tema tendrá una URL pública con todos sus materiales asociados.
 

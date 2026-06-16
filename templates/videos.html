@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Videos · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Audiovisual</p>
+  <h1>Videos</h1>
+  <p>Clases, cápsulas, exposiciones y recursos audiovisuales asociados a los temas de estudio.</p>
+</section>
+
+<div class="card-grid">
+  {% for material in videos %}
+    {% include "partials/material_card.html" %}
+  {% else %}
+    <article class="empty-card">Aún no hay videos publicados.</article>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -32,10 +32,12 @@ ALLOWED_EXTENSIONS = {
     "doc", "docx",
     "ppt", "pptx",
     "mp3", "wav", "m4a", "ogg",
+    "mp4", "webm", "ogv", "mov",
     "png", "jpg", "jpeg", "webp", "gif",
 }
 LOGO_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "svg"}
 AUDIO_EXTENSIONS = {"mp3", "wav", "m4a", "ogg"}
+VIDEO_EXTENSIONS = {"mp4", "webm", "ogv", "mov"}
 WORD_EXTENSIONS = {"doc", "docx"}
 PRESENTATION_EXTENSIONS = {"pdf", "ppt", "pptx"}
 PDF_EXTENSIONS = {"pdf"}
@@ -46,12 +48,14 @@ KIND_LABELS = {
     "guia": "Guía de estudio",
     "presentacion": "Presentación",
     "podcast": "Podcast",
+    "video": "Video",
 }
 
 KIND_HELP = {
     "guia": "Acepta PDF, DOC o DOCX. Si subes DOCX, la guía se transforma a una lectura web con tablas.",
     "presentacion": "Acepta PDF, PPT o PPTX. Los PDF usan visor propio; los PPT/PPTX se abren con visor Office cuando el sitio está público.",
     "podcast": "Acepta MP3, WAV, M4A u OGG.",
+    "video": "Acepta MP4, WEBM, OGV o MOV. Se reproduce directamente en la página del tema.",
 }
 
 
@@ -118,7 +122,7 @@ def init_db():
             topic_id INTEGER,
             title TEXT NOT NULL,
             description TEXT,
-            kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast')),
+            kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'video')),
             filename TEXT NOT NULL,
             html_filename TEXT,
             original_filename TEXT NOT NULL,
@@ -156,6 +160,34 @@ def init_db():
 
     if not column_exists(db, "reviews", "topic_id"):
         db.execute("ALTER TABLE reviews ADD COLUMN topic_id INTEGER")
+
+    # Si una base antigua fue creada antes del módulo Video, SQLite conserva el CHECK anterior.
+    # Esta migración reconstruye la tabla para permitir kind='video' sin perder materiales existentes.
+    materials_sql_row = db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='materials'").fetchone()
+    materials_sql = materials_sql_row[0] if materials_sql_row else ""
+    if "'video'" not in materials_sql:
+        db.executescript(
+            """
+            CREATE TABLE materials_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                topic_id INTEGER,
+                title TEXT NOT NULL,
+                description TEXT,
+                kind TEXT NOT NULL CHECK(kind IN ('guia', 'presentacion', 'podcast', 'video')),
+                filename TEXT NOT NULL,
+                html_filename TEXT,
+                original_filename TEXT NOT NULL,
+                original_extension TEXT,
+                mime_type TEXT,
+                created_at TEXT NOT NULL
+            );
+            INSERT INTO materials_new(id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, created_at)
+            SELECT id, topic_id, title, description, kind, filename, html_filename, original_filename, original_extension, mime_type, created_at
+            FROM materials;
+            DROP TABLE materials;
+            ALTER TABLE materials_new RENAME TO materials;
+            """
+        )
 
     general = db.execute("SELECT id FROM topics WHERE slug = ?", ("general",)).fetchone()
     if not general:
@@ -233,6 +265,8 @@ def validate_file_kind(kind: str, ext: str) -> Optional[str]:
         return "Las presentaciones deben ser PDF, PPT o PPTX."
     if kind == "podcast" and ext not in AUDIO_EXTENSIONS:
         return "Los podcasts deben ser MP3, WAV, M4A u OGG."
+    if kind == "video" and ext not in VIDEO_EXTENSIONS:
+        return "Los videos deben ser MP4, WEBM, OGV o MOV."
     return None
 
 
@@ -371,6 +405,7 @@ def index():
         "guia": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='guia'").fetchone()["c"],
         "presentacion": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='presentacion'").fetchone()["c"],
         "podcast": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='podcast'").fetchone()["c"],
+        "video": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='video'").fetchone()["c"],
         "resena": db.execute("SELECT COUNT(*) AS c FROM reviews").fetchone()["c"],
         "tema": db.execute("SELECT COUNT(*) AS c FROM topics").fetchone()["c"],
     }
@@ -488,6 +523,12 @@ def podcasts():
     return render_template("podcasts.html", podcasts=rows)
 
 
+@app.route("/videos")
+def videos():
+    rows = material_query("m.kind='video'")
+    return render_template("videos.html", videos=rows)
+
+
 @app.route("/resenas")
 def reviews():
     rows = review_query()
@@ -573,7 +614,7 @@ def admin_upload():
             return redirect(url_for("admin_upload"))
 
         if not allowed_file(file.filename):
-            flash("Formato no permitido. Usa PDF, DOCX/DOC, PPTX/PPT o audio compatible.", "danger")
+            flash("Formato no permitido. Usa PDF, DOCX/DOC, PPTX/PPT, audio o video compatible.", "danger")
             return redirect(url_for("admin_upload"))
 
         ext = file_extension(file.filename)

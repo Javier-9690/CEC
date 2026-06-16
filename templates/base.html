@@ -26,6 +26,7 @@
         <a href="{{ url_for('topics') }}">Temas</a>
         <a href="{{ url_for('library') }}">Biblioteca</a>
         <a href="{{ url_for('podcasts') }}">Podcast</a>
+        <a href="{{ url_for('videos') }}">Videos</a>
         <a href="{{ url_for('reviews') }}">Reseñas</a>
         {% if session.get('admin_logged_in') %}
           <a href="{{ url_for('admin_dashboard') }}">Panel</a>
@@ -51,7 +52,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>{{ site_name }} · Guías Word/PDF, presentaciones, podcast y reseñas organizadas por tema.</p>
+      <p>{{ site_name }} · Guías Word/PDF, presentaciones, podcast, videos y reseñas organizadas por tema.</p>
     </footer>
   </div>
 </body>
