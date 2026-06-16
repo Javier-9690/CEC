@@ -39,31 +39,6 @@ KIND_LABELS = {
 }
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
-    app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", "120")) * 1024 * 1024
-
-    with app.app_context():
-        init_db()
-
-    @app.context_processor
-    def inject_globals():
-        return {
-            "site_logo": get_setting("logo_filename"),
-            "site_name": get_setting("site_name") or "Centro de Estudios",
-            "kind_labels": KIND_LABELS,
-        }
-
-    return app
-
-
-app = create_app()
-
-
 def get_db() -> sqlite3.Connection:
     if "db" not in g:
         g.db = sqlite3.connect(DB_PATH)
@@ -71,7 +46,6 @@ def get_db() -> sqlite3.Connection:
     return g.db
 
 
-@app.teardown_appcontext
 def close_db(exception=None):
     db = g.pop("db", None)
     if db is not None:
@@ -79,6 +53,9 @@ def close_db(exception=None):
 
 
 def init_db():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
     db = sqlite3.connect(DB_PATH)
     db.executescript(
         """
@@ -154,7 +131,35 @@ def login_required(view):
             flash("Debes ingresar al panel para realizar esa acción.", "warning")
             return redirect(url_for("admin_login", next=request.path))
         return view(*args, **kwargs)
+
     return wrapped
+
+
+def create_app() -> Flask:
+    app = Flask(__name__)
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", secrets.token_hex(32))
+    app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", "120")) * 1024 * 1024
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    with app.app_context():
+        init_db()
+
+    app.teardown_appcontext(close_db)
+
+    @app.context_processor
+    def inject_globals():
+        return {
+            "site_logo": get_setting("logo_filename"),
+            "site_name": get_setting("site_name") or "Centro de Estudios",
+            "kind_labels": KIND_LABELS,
+        }
+
+    return app
+
+
+app = create_app()
 
 
 @app.route("/")
@@ -172,7 +177,12 @@ def index():
         "podcast": db.execute("SELECT COUNT(*) AS c FROM materials WHERE kind='podcast'").fetchone()["c"],
         "resena": db.execute("SELECT COUNT(*) AS c FROM reviews").fetchone()["c"],
     }
-    return render_template("index.html", latest_materials=latest_materials, latest_reviews=latest_reviews, counts=counts)
+    return render_template(
+        "index.html",
+        latest_materials=latest_materials,
+        latest_reviews=latest_reviews,
+        counts=counts,
+    )
 
 
 @app.route("/biblioteca")
@@ -282,7 +292,15 @@ def admin_upload():
         db.execute(
             "INSERT INTO materials(title, description, kind, filename, original_filename, mime_type, created_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (title, description, kind, stored_name, file.filename, file.mimetype, datetime.utcnow().isoformat(timespec="seconds")),
+            (
+                title,
+                description,
+                kind,
+                stored_name,
+                file.filename,
+                file.mimetype,
+                datetime.utcnow().isoformat(timespec="seconds"),
+            ),
         )
         db.commit()
         flash("Material publicado correctamente.", "success")
