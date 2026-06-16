@@ -726,3 +726,43 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* Protección visual / modo sin descarga pública */
+.protected-note {
+  border: 1px solid rgba(130, 88, 28, 0.25);
+  background: rgba(255, 248, 226, 0.7);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  color: #4c3518;
+}
+.protected-content video,
+.protected-content audio,
+.protected-frame,
+.protected-reading,
+#pdfCanvas {
+  -webkit-user-drag: none;
+}
+.protected-reading {
+  user-select: text;
+}
+.embed-box iframe,
+.youtube-frame,
+.soundcloud-frame {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.35);
+}
+.youtube-frame {
+  aspect-ratio: 16 / 9;
+  min-height: 320px;
+}
+.soundcloud-frame {
+  height: 166px;
+}
+.text-article {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: normal;
+}
