@@ -1,0 +1,6 @@
+<article class="review-card">
+  <div class="review-stars">{% if review.rating %}{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}{% else %}Sin nota{% endif %}</div>
+  <h3>{{ review.title }}</h3>
+  <p>{{ review.body[:220] }}{% if review.body|length > 220 %}...{% endif %}</p>
+  <div class="card-meta">{{ review.author or "Autor no indicado" }} · {{ review.created_at|date_display }}</div>
+</article>

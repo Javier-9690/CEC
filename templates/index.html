@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Inicio · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hero parchment-panel">
+  <div class="hero-content">
+    <p class="eyebrow">Archivo de formación y estudio</p>
+    <h1>Una biblioteca digital con espíritu tradicional.</h1>
+    <p class="hero-copy">Publica guías de estudio, presentaciones PDF navegables, episodios de podcast y reseñas en una estética sobria de pergamino.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="{{ url_for('library') }}">Ver biblioteca</a>
+      <a class="btn secondary" href="{{ url_for('admin_login') }}">Subir contenido</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <span class="ornament">✠</span>
+    <h2>Contenido disponible</h2>
+    <div class="stats-grid">
+      <div><strong>{{ counts.guia }}</strong><span>Guías</span></div>
+      <div><strong>{{ counts.presentacion }}</strong><span>Presentaciones</span></div>
+      <div><strong>{{ counts.podcast }}</strong><span>Podcast</span></div>
+      <div><strong>{{ counts.resena }}</strong><span>Reseñas</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-heading">
+  <p class="eyebrow">Últimas publicaciones</p>
+  <h2>Material de estudio</h2>
+</section>
+
+<div class="card-grid">
+  {% for material in latest_materials %}
+    {% include "partials/material_card.html" %}
+  {% else %}
+    <article class="empty-card">Aún no hay materiales publicados. Entra al panel de administración para subir el primero.</article>
+  {% endfor %}
+</div>
+
+<section class="section-heading spaced">
+  <p class="eyebrow">Lecturas comentadas</p>
+  <h2>Reseñas recientes</h2>
+</section>
+
+<div class="review-grid">
+  {% for review in latest_reviews %}
+    {% include "partials/review_card.html" %}
+  {% else %}
+    <article class="empty-card">Aún no hay reseñas publicadas.</article>
+  {% endfor %}
+</div>
+{% endblock %}

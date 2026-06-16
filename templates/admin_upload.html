@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Subir material · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="form-panel parchment-panel">
+  <p class="eyebrow">Publicación</p>
+  <h1>Subir nuevo material</h1>
+  <form method="post" enctype="multipart/form-data" class="stack-form">
+    <label>Título
+      <input type="text" name="title" required placeholder="Ej: Guía de estudio sobre simbolismo religioso">
+    </label>
+    <label>Tipo de contenido
+      <select name="kind" required>
+        <option value="">Selecciona una opción</option>
+        <option value="guia">Guía de estudio en PDF</option>
+        <option value="presentacion">Presentación PDF interactiva</option>
+        <option value="podcast">Podcast</option>
+      </select>
+    </label>
+    <label>Descripción
+      <textarea name="description" rows="5" placeholder="Breve descripción del contenido"></textarea>
+    </label>
+    <label>Archivo
+      <input type="file" name="file" required accept="application/pdf,audio/mpeg,audio/wav,audio/mp4,audio/ogg">
+    </label>
+    <button class="btn primary" type="submit">Publicar material</button>
+  </form>
+</section>
+{% endblock %}

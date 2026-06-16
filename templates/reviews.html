@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Reseñas · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Lectura crítica</p>
+  <h1>Reseñas</h1>
+  <p>Comentarios, notas de lectura y valoraciones de obras o materiales de estudio.</p>
+</section>
+
+<div class="review-grid wide">
+  {% for review in reviews %}
+    <article class="review-card full">
+      <div class="review-stars">{% if review.rating %}{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}{% else %}Sin nota{% endif %}</div>
+      <h2>{{ review.title }}</h2>
+      <p>{{ review.body }}</p>
+      <div class="card-meta">{{ review.author or "Autor no indicado" }} · {{ review.created_at|date_display }}</div>
+    </article>
+  {% else %}
+    <article class="empty-card">Aún no hay reseñas publicadas.</article>
+  {% endfor %}
+</div>
+{% endblock %}

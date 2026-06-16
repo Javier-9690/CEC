@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Inicio">
+        <span class="brand-seal">
+          {% if site_logo %}
+            <img src="{{ url_for('uploaded_file', filename=site_logo) }}" alt="Logo">
+          {% else %}
+            <img src="{{ url_for('static', filename='img/default_logo.svg') }}" alt="Logo provisional">
+          {% endif %}
+        </span>
+        <span class="brand-text">
+          <strong>{{ site_name }}</strong>
+          <small>Biblioteca digital de estudios</small>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <a href="{{ url_for('library') }}">Biblioteca</a>
+        <a href="{{ url_for('podcasts') }}">Podcast</a>
+        <a href="{{ url_for('reviews') }}">Reseñas</a>
+        {% if session.get('admin_logged_in') %}
+          <a href="{{ url_for('admin_dashboard') }}">Panel</a>
+          <a href="{{ url_for('logout') }}">Salir</a>
+        {% else %}
+          <a href="{{ url_for('admin_login') }}">Admin</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <section class="flash-stack" aria-live="polite">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <p>{{ site_name }} · Plataforma de guías, presentaciones, podcast y reseñas.</p>
+    </footer>
+  </div>
+</body>
+</html>

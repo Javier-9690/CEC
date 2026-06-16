@@ -1,0 +1,7 @@
+<article class="content-card">
+  <div class="card-kicker">{{ kind_labels[material.kind] }}</div>
+  <h3>{{ material.title }}</h3>
+  <p>{{ material.description or "Sin descripción." }}</p>
+  <div class="card-meta">Publicado: {{ material.created_at|date_display }}</div>
+  <a class="text-link" href="{{ url_for('material_detail', material_id=material.id) }}">Abrir material</a>
+</article>

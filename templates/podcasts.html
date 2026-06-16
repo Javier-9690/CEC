@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Podcast · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Audio</p>
+  <h1>Podcast</h1>
+  <p>Episodios disponibles para escuchar directamente desde la página.</p>
+</section>
+
+<div class="podcast-list">
+  {% for podcast in podcasts %}
+    <article class="podcast-card">
+      <div>
+        <p class="card-kicker">Podcast</p>
+        <h2>{{ podcast.title }}</h2>
+        <p>{{ podcast.description or "Sin descripción." }}</p>
+      </div>
+      <audio controls preload="metadata" src="{{ url_for('uploaded_file', filename=podcast.filename) }}"></audio>
+    </article>
+  {% else %}
+    <article class="empty-card">Aún no hay podcast publicados.</article>
+  {% endfor %}
+</div>
+{% endblock %}

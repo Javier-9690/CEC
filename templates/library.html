@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Biblioteca · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Catálogo</p>
+  <h1>Biblioteca</h1>
+  <p>Filtra guías, presentaciones PDF y podcast publicados en la plataforma.</p>
+</section>
+
+<div class="filter-bar">
+  <a class="filter-pill {% if not selected_kind %}active{% endif %}" href="{{ url_for('library') }}">Todo</a>
+  {% for key, label in kind_labels.items() %}
+    <a class="filter-pill {% if selected_kind == key %}active{% endif %}" href="{{ url_for('library', tipo=key) }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="card-grid">
+  {% for material in materials %}
+    {% include "partials/material_card.html" %}
+  {% else %}
+    <article class="empty-card">No hay materiales para este filtro.</article>
+  {% endfor %}
+</div>
+{% endblock %}

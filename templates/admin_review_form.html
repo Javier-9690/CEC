@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Nueva reseña · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="form-panel parchment-panel">
+  <p class="eyebrow">Reseña</p>
+  <h1>Publicar reseña</h1>
+  <form method="post" class="stack-form">
+    <label>Título
+      <input type="text" name="title" required placeholder="Título de la reseña">
+    </label>
+    <label>Autor o responsable
+      <input type="text" name="author" placeholder="Nombre del autor">
+    </label>
+    <label>Valoración opcional
+      <select name="rating">
+        <option value="">Sin valoración</option>
+        <option value="5">5 estrellas</option>
+        <option value="4">4 estrellas</option>
+        <option value="3">3 estrellas</option>
+        <option value="2">2 estrellas</option>
+        <option value="1">1 estrella</option>
+      </select>
+    </label>
+    <label>Contenido
+      <textarea name="body" rows="10" required placeholder="Escribe la reseña"></textarea>
+    </label>
+    <button class="btn primary" type="submit">Publicar reseña</button>
+  </form>
+</section>
+{% endblock %}

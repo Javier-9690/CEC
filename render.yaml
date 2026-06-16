@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: centro-estudios-pergamino
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /var/data
+      - key: MAX_UPLOAD_MB
+        value: 120
+    disk:
+      name: centro-estudios-data
+      mountPath: /var/data
+      sizeGB: 2

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Administración · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="form-panel parchment-panel narrow">
+  <p class="eyebrow">Acceso reservado</p>
+  <h1>Panel de administración</h1>
+  <form method="post" class="stack-form">
+    <label>Clave de administrador
+      <input type="password" name="password" required autocomplete="current-password" placeholder="Ingresa la clave">
+    </label>
+    <button class="btn primary" type="submit">Ingresar</button>
+  </form>
+  <p class="hint">Clave inicial local: <code>cambiar-esta-clave</code>. En Render define la variable <code>ADMIN_PASSWORD</code>.</p>
+</section>
+{% endblock %}

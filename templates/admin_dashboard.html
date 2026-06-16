@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Panel · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Administración</p>
+  <h1>Panel de contenido</h1>
+  <p>Sube materiales, cambia el logo, define el nombre del sitio y publica reseñas.</p>
+  <div class="viewer-actions">
+    <a class="btn primary" href="{{ url_for('admin_upload') }}">Subir material</a>
+    <a class="btn secondary" href="{{ url_for('admin_review_new') }}">Nueva reseña</a>
+  </div>
+</section>
+
+<section class="admin-grid">
+  <article class="parchment-panel admin-card">
+    <h2>Identidad visual</h2>
+    <form method="post" action="{{ url_for('admin_logo') }}" enctype="multipart/form-data" class="stack-form">
+      <label>Nombre del sitio
+        <input type="text" name="site_name" value="{{ site_name }}" placeholder="Centro de Estudios Católicos">
+      </label>
+      <label>Logo del sitio
+        <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+      </label>
+      <button class="btn primary" type="submit">Guardar identidad</button>
+    </form>
+  </article>
+
+  <article class="parchment-panel admin-card">
+    <h2>Materiales recientes</h2>
+    <div class="admin-list">
+      {% for material in materials %}
+        <div class="admin-row">
+          <div>
+            <strong>{{ material.title }}</strong>
+            <small>{{ kind_labels[material.kind] }} · {{ material.created_at|date_display }}</small>
+          </div>
+          <form method="post" action="{{ url_for('admin_material_delete', material_id=material.id) }}" onsubmit="return confirm('¿Eliminar este material?');">
+            <button class="danger-link" type="submit">Eliminar</button>
+          </form>
+        </div>
+      {% else %}
+        <p class="hint">No hay materiales publicados.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="parchment-panel admin-card">
+  <h2>Reseñas recientes</h2>
+  <div class="admin-list">
+    {% for review in reviews %}
+      <div class="admin-row">
+        <div>
+          <strong>{{ review.title }}</strong>
+          <small>{{ review.author or 'Autor no indicado' }} · {{ review.created_at|date_display }}</small>
+        </div>
+        <form method="post" action="{{ url_for('admin_review_delete', review_id=review.id) }}" onsubmit="return confirm('¿Eliminar esta reseña?');">
+          <button class="danger-link" type="submit">Eliminar</button>
+        </form>
+      </div>
+    {% else %}
+      <p class="hint">No hay reseñas publicadas.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
