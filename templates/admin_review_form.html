@@ -8,9 +8,30 @@
     <label>Título
       <input type="text" name="title" required placeholder="Título de la reseña">
     </label>
-    <label>Autor o responsable
-      <input type="text" name="author" placeholder="Nombre del autor">
-    </label>
+    <div class="form-grid-2">
+      <label>Autor o responsable
+        <input type="text" name="author" placeholder="Nombre del autor">
+      </label>
+      <label>Tema existente
+        <select name="topic_id">
+          <option value="">Usar tema General</option>
+          {% for topic in topics %}
+            <option value="{{ topic.id }}">{{ topic.title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <details class="inline-help">
+      <summary>Crear un nuevo tema para esta reseña</summary>
+      <label>Nombre del nuevo tema
+        <input type="text" name="new_topic_title" placeholder="Ej: Patrística eucarística">
+      </label>
+      <label>Descripción del nuevo tema
+        <textarea name="new_topic_description" rows="3" placeholder="Breve explicación de la unidad temática"></textarea>
+      </label>
+    </details>
+
     <label>Valoración opcional
       <select name="rating">
         <option value="">Sin valoración</option>

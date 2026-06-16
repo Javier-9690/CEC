@@ -1,66 +1,74 @@
-# Guía breve para montar en Render.com
+# Despliegue en Render.com
 
 ## 1. Subir a GitHub
+
+Descomprime el proyecto, entra a la carpeta y súbelo a un repositorio GitHub.
 
 ```bash
 git init
 git add .
-git commit -m "Primera version Centro de Estudios"
+git commit -m "Plataforma CEC pergamino"
 git branch -M main
-git remote add origin TU_REPOSITORIO
+git remote add origin URL_DE_TU_REPOSITORIO
 git push -u origin main
 ```
 
-## 2. Crear servicio en Render
+## 2. Crear Web Service en Render
 
-### Con Blueprint
+En Render:
 
-1. Entra a Render.
-2. Selecciona **New +**.
-3. Selecciona **Blueprint**.
-4. Conecta tu repositorio.
-5. Render detectará `render.yaml`.
-6. Agrega `ADMIN_PASSWORD`.
-7. Despliega.
-
-### Manual
-
-1. New + → Web Service.
-2. Conecta el repositorio.
-3. Runtime: Python.
-4. Build command:
+1. New +
+2. Web Service
+3. Conecta tu repositorio GitHub
+4. Runtime: Python
+5. Build Command:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-5. Start command:
+6. Start Command:
 
 ```bash
 gunicorn app:app
 ```
 
-6. Environment variables:
+## 3. Variables de entorno
+
+Agrega:
 
 ```text
-SECRET_KEY=clave_larga_y_segura
-ADMIN_PASSWORD=clave_para_entrar_al_panel
+ADMIN_PASSWORD=tu_clave_segura
+SECRET_KEY=una_cadena_larga_aleatoria
 DATA_DIR=/var/data
 MAX_UPLOAD_MB=120
 ```
 
-7. Agrega Persistent Disk con mount path:
+## 4. Disco persistente
+
+Para que no se pierdan PDFs, Word, PPT, audios y logos cuando Render reinicie o redespliegue el servicio, agrega un Persistent Disk y móntalo en:
 
 ```text
 /var/data
 ```
 
-## 3. Entrar al panel
+## 5. Subir el logo
 
-Cuando Render entregue la URL pública, entra a:
+Cuando el sitio esté en línea:
 
-```text
-https://tu-sitio.onrender.com/admin
-```
+1. Abre `https://tu-sitio.onrender.com/admin`
+2. Entra con tu clave `ADMIN_PASSWORD`
+3. Ve a **Identidad visual**
+4. Sube el logo PNG
+5. Guarda
 
-Desde ahí subes tu logo, guías, presentaciones, podcasts y reseñas.
+Esta versión ya trae el logo CEC como logo base. El panel sirve para reemplazarlo sin tocar código.
+
+## 6. Uso recomendado
+
+1. Crea un tema: por ejemplo, `Simbolismo religioso`.
+2. Sube una guía DOCX o PDF y asóciala a ese tema.
+3. Sube una presentación PDF, PPT o PPTX al mismo tema.
+4. Sube un podcast al mismo tema.
+5. Publica una reseña asociada al mismo tema.
+6. En la página pública del tema aparecerá todo reunido.

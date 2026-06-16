@@ -4,13 +4,20 @@
 <section class="page-title parchment-panel compact">
   <p class="eyebrow">Catálogo</p>
   <h1>Biblioteca</h1>
-  <p>Filtra guías, presentaciones PDF y podcast publicados en la plataforma.</p>
+  <p>Filtra guías Word/PDF, presentaciones PPT/PPTX/PDF y podcast publicados en la plataforma.</p>
 </section>
 
 <div class="filter-bar">
-  <a class="filter-pill {% if not selected_kind %}active{% endif %}" href="{{ url_for('library') }}">Todo</a>
+  <a class="filter-pill {% if not selected_kind %}active{% endif %}" href="{{ url_for('library', tema=selected_topic) }}">Todo</a>
   {% for key, label in kind_labels.items() %}
-    <a class="filter-pill {% if selected_kind == key %}active{% endif %}" href="{{ url_for('library', tipo=key) }}">{{ label }}</a>
+    <a class="filter-pill {% if selected_kind == key %}active{% endif %}" href="{{ url_for('library', tipo=key, tema=selected_topic) }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="filter-bar topic-filter">
+  <a class="filter-pill {% if not selected_topic %}active{% endif %}" href="{{ url_for('library', tipo=selected_kind) }}">Todos los temas</a>
+  {% for topic in topics %}
+    <a class="filter-pill {% if selected_topic == topic.slug %}active{% endif %}" href="{{ url_for('library', tipo=selected_kind, tema=topic.slug) }}">{{ topic.title }}</a>
   {% endfor %}
 </div>
 

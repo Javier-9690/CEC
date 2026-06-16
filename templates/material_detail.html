@@ -2,27 +2,54 @@
 {% block title %}{{ material.title }} · {{ site_name }}{% endblock %}
 {% block content %}
 <section class="page-title parchment-panel compact">
-  <p class="eyebrow">{{ kind_labels[material.kind] }}</p>
+  <p class="eyebrow">{{ kind_labels[material.kind] }}{% if material.topic_title %} · {{ material.topic_title }}{% endif %}</p>
   <h1>{{ material.title }}</h1>
   <p>{{ material.description or "Sin descripción." }}</p>
+  {% if material.topic_title %}
+    <a class="filter-pill" href="{{ url_for('topic_detail', slug=material.topic_slug) }}">Ver tema completo: {{ material.topic_title }}</a>
+  {% endif %}
 </section>
 
 <section class="viewer-panel parchment-panel">
   {% set file_url = url_for('uploaded_file', filename=material.filename) %}
-  {% if material.kind in ['guia', 'presentacion'] and material.filename.lower().endswith('.pdf') %}
+  {% set lower_name = material.filename.lower() %}
+
+  {% if material.kind in ['guia', 'presentacion'] and lower_name.endswith('.pdf') %}
     <div class="viewer-actions">
-      <a class="btn primary" href="{{ url_for('presentation_viewer', material_id=material.id) }}">Abrir visor interactivo</a>
+      <a class="btn primary" href="{{ url_for('pdf_viewer', material_id=material.id) }}">Abrir visor interactivo</a>
       <a class="btn secondary" href="{{ file_url }}" target="_blank" rel="noopener">Abrir PDF en nueva pestaña</a>
+      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
     </div>
     <iframe class="pdf-frame" src="{{ file_url }}#toolbar=1" title="Visor PDF"></iframe>
+
+  {% elif material.kind == 'guia' and docx_html %}
+    <div class="viewer-actions">
+      <a class="btn secondary" href="{{ file_url }}" download>Descargar Word original</a>
+      <a class="btn secondary" href="{{ office_viewer_url(file_url_external) }}" target="_blank" rel="noopener">Abrir en visor Office</a>
+    </div>
+    <div class="reading-shell">
+      {{ docx_html|safe }}
+    </div>
+
+  {% elif ext in ['doc', 'docx', 'ppt', 'pptx'] %}
+    <div class="viewer-actions">
+      <a class="btn primary" href="{{ office_viewer_url(file_url_external) }}" target="_blank" rel="noopener">Abrir visor Office</a>
+      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
+    </div>
+    <iframe class="office-frame" src="{{ office_viewer_url(file_url_external) }}" title="Visor Office"></iframe>
+    <p class="hint viewer-note">El visor Office funciona correctamente cuando la página ya está desplegada públicamente en Render. En local puede no cargar porque el archivo no es accesible desde internet.</p>
+
   {% elif material.kind == 'podcast' %}
     <div class="audio-box">
       <h2>Reproductor de podcast</h2>
       <audio controls preload="metadata" src="{{ file_url }}"></audio>
       <a class="btn secondary" href="{{ file_url }}" download>Descargar episodio</a>
     </div>
+
   {% else %}
-    <img class="material-image" src="{{ file_url }}" alt="{{ material.title }}">
+    <div class="viewer-actions">
+      <a class="btn secondary" href="{{ file_url }}" download>Descargar archivo</a>
+    </div>
   {% endif %}
 </section>
 {% endblock %}

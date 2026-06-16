@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Temas · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Organización doctrinal</p>
+  <h1>Temas de estudio</h1>
+  <p>Cada tema puede reunir guías Word, PDF, presentaciones, podcast y reseñas en una sola página.</p>
+</section>
+
+<div class="topic-grid">
+  {% for topic in topics %}
+    <article class="topic-card">
+      <p class="card-kicker">Tema</p>
+      <h2>{{ topic.title }}</h2>
+      <p>{{ topic.description or "Sin descripción." }}</p>
+      <div class="card-meta">{{ topic.material_count }} materiales · {{ topic.review_count }} reseñas</div>
+      <a class="text-link" href="{{ url_for('topic_detail', slug=topic.slug) }}">Abrir tema</a>
+    </article>
+  {% else %}
+    <article class="empty-card">Aún no hay temas creados.</article>
+  {% endfor %}
+</div>
+{% endblock %}

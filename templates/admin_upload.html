@@ -8,20 +8,47 @@
     <label>Título
       <input type="text" name="title" required placeholder="Ej: Guía de estudio sobre simbolismo religioso">
     </label>
-    <label>Tipo de contenido
-      <select name="kind" required>
-        <option value="">Selecciona una opción</option>
-        <option value="guia">Guía de estudio en PDF</option>
-        <option value="presentacion">Presentación PDF interactiva</option>
-        <option value="podcast">Podcast</option>
-      </select>
-    </label>
+
+    <div class="form-grid-2">
+      <label>Tipo de contenido
+        <select name="kind" required>
+          <option value="">Selecciona una opción</option>
+          <option value="guia">Guía de estudio: PDF, DOC, DOCX</option>
+          <option value="presentacion">Presentación: PDF, PPT, PPTX</option>
+          <option value="podcast">Podcast: MP3, WAV, M4A, OGG</option>
+        </select>
+      </label>
+      <label>Tema existente
+        <select name="topic_id">
+          <option value="">Usar tema General</option>
+          {% for topic in topics %}
+            <option value="{{ topic.id }}">{{ topic.title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <details class="inline-help">
+      <summary>Crear un nuevo tema para este material</summary>
+      <label>Nombre del nuevo tema
+        <input type="text" name="new_topic_title" placeholder="Ej: Simbolismo religioso">
+      </label>
+      <label>Descripción del nuevo tema
+        <textarea name="new_topic_description" rows="3" placeholder="Breve explicación de la unidad temática"></textarea>
+      </label>
+    </details>
+
     <label>Descripción
       <textarea name="description" rows="5" placeholder="Breve descripción del contenido"></textarea>
     </label>
     <label>Archivo
-      <input type="file" name="file" required accept="application/pdf,audio/mpeg,audio/wav,audio/mp4,audio/ogg">
+      <input type="file" name="file" required accept=".pdf,.doc,.docx,.ppt,.pptx,audio/mpeg,audio/wav,audio/mp4,audio/ogg,.mp3,.wav,.m4a,.ogg">
     </label>
+
+    <div class="hint-box">
+      <strong>Nota:</strong> las guías DOCX se convierten a lectura web y conservan tablas básicas. Los PPT/PPTX se visualizan con visor Office cuando tu sitio ya está publicado en Render. Para máxima estabilidad, también puedes subir presentaciones exportadas a PDF.
+    </div>
+
     <button class="btn primary" type="submit">Publicar material</button>
   </form>
 </section>

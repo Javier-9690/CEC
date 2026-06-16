@@ -4,7 +4,7 @@
 <section class="page-title parchment-panel compact">
   <p class="eyebrow">Lectura crítica</p>
   <h1>Reseñas</h1>
-  <p>Comentarios, notas de lectura y valoraciones de obras o materiales de estudio.</p>
+  <p>Comentarios, notas de lectura y valoraciones de obras o materiales de estudio, también asociables a temas.</p>
 </section>
 
 <div class="review-grid wide">
@@ -13,7 +13,10 @@
       <div class="review-stars">{% if review.rating %}{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}{% else %}Sin nota{% endif %}</div>
       <h2>{{ review.title }}</h2>
       <p>{{ review.body }}</p>
-      <div class="card-meta">{{ review.author or "Autor no indicado" }} · {{ review.created_at|date_display }}</div>
+      <div class="card-meta">
+        {% if review.topic_title %}<a href="{{ url_for('topic_detail', slug=review.topic_slug) }}">{{ review.topic_title }}</a> · {% endif %}
+        {{ review.author or "Autor no indicado" }} · {{ review.created_at|date_display }}
+      </div>
     </article>
   {% else %}
     <article class="empty-card">Aún no hay reseñas publicadas.</article>

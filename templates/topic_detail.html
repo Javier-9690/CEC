@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="page-title parchment-panel compact">
+  <p class="eyebrow">Tema de estudio</p>
+  <h1>{{ topic.title }}</h1>
+  <p>{{ topic.description or "Materiales asociados a este tema." }}</p>
+</section>
+
+<section class="section-heading">
+  <p class="eyebrow">Materiales</p>
+  <h2>Guías, documentos, presentaciones y podcast</h2>
+</section>
+<div class="card-grid">
+  {% for material in materials %}
+    {% include "partials/material_card.html" %}
+  {% else %}
+    <article class="empty-card">Este tema todavía no tiene materiales asociados.</article>
+  {% endfor %}
+</div>
+
+<section class="section-heading spaced">
+  <p class="eyebrow">Reseñas</p>
+  <h2>Lecturas comentadas del tema</h2>
+</section>
+<div class="review-grid wide">
+  {% for review in reviews %}
+    {% include "partials/review_card.html" %}
+  {% else %}
+    <article class="empty-card">Este tema todavía no tiene reseñas asociadas.</article>
+  {% endfor %}
+</div>
+{% endblock %}

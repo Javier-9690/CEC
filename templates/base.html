@@ -15,11 +15,7 @@
     <header class="site-header">
       <a class="brand" href="{{ url_for('index') }}" aria-label="Inicio">
         <span class="brand-seal">
-          {% if site_logo %}
-            <img src="{{ url_for('uploaded_file', filename=site_logo) }}" alt="Logo">
-          {% else %}
-            <img src="{{ url_for('static', filename='img/default_logo.svg') }}" alt="Logo provisional">
-          {% endif %}
+          <img src="{{ logo_url }}" alt="Logo {{ site_name }}">
         </span>
         <span class="brand-text">
           <strong>{{ site_name }}</strong>
@@ -27,6 +23,7 @@
         </span>
       </a>
       <nav class="main-nav">
+        <a href="{{ url_for('topics') }}">Temas</a>
         <a href="{{ url_for('library') }}">Biblioteca</a>
         <a href="{{ url_for('podcasts') }}">Podcast</a>
         <a href="{{ url_for('reviews') }}">Reseñas</a>
@@ -54,7 +51,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>{{ site_name }} · Plataforma de guías, presentaciones, podcast y reseñas.</p>
+      <p>{{ site_name }} · Guías Word/PDF, presentaciones, podcast y reseñas organizadas por tema.</p>
     </footer>
   </div>
 </body>

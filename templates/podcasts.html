@@ -4,16 +4,17 @@
 <section class="page-title parchment-panel compact">
   <p class="eyebrow">Audio</p>
   <h1>Podcast</h1>
-  <p>Episodios disponibles para escuchar directamente desde la página.</p>
+  <p>Episodios disponibles para escuchar directamente desde la página. Cada episodio puede quedar asociado a un tema de estudio.</p>
 </section>
 
 <div class="podcast-list">
   {% for podcast in podcasts %}
     <article class="podcast-card">
       <div>
-        <p class="card-kicker">Podcast</p>
+        <p class="card-kicker">Podcast{% if podcast.topic_title %} · {{ podcast.topic_title }}{% endif %}</p>
         <h2>{{ podcast.title }}</h2>
         <p>{{ podcast.description or "Sin descripción." }}</p>
+        {% if podcast.topic_title %}<a class="text-link" href="{{ url_for('topic_detail', slug=podcast.topic_slug) }}">Ver tema</a>{% endif %}
       </div>
       <audio controls preload="metadata" src="{{ url_for('uploaded_file', filename=podcast.filename) }}"></audio>
     </article>

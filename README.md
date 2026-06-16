@@ -1,44 +1,41 @@
-# Centro de Estudios Pergamino
+# Centro de Estudios Católicos · Plataforma pergamino
 
-Aplicación web en Flask para publicar y visualizar:
+Aplicación web Flask preparada para Render.com. Permite publicar contenido de estudio con estética tradicional tipo pergamino y logo institucional CEC.
 
-- Guías de estudio en PDF.
-- Presentaciones PDF con visor interactivo.
-- Podcast en audio.
-- Reseñas de libros, documentos o materiales.
-- Logo personalizado subido desde el panel de administración.
+## Funciones principales
 
-La estética visual usa tonos pergamino, tipografía tradicional y paneles ornamentales sobrios.
+- Página pública con logo institucional.
+- Temas de estudio: cada tema agrupa materiales y reseñas.
+- Guías de estudio en PDF, DOC y DOCX.
+- Conversión de DOCX a lectura web con tablas básicas mediante `mammoth`.
+- Presentaciones en PDF, PPT y PPTX.
+- Visor interactivo propio para PDF con avance de páginas y zoom.
+- Visor Office para DOC, DOCX, PPT y PPTX cuando el sitio está publicado en internet.
+- Podcast con reproductor de audio.
+- Reseñas asociables a temas.
+- Panel de administración protegido por clave.
+- Carga de logo PNG/JPG/WEBP/SVG desde el panel.
+- SQLite con migraciones suaves para versiones anteriores.
 
-## 1. Estructura
+## Formatos aceptados
 
-```text
-centro_estudios_pergamino/
-├── app.py
-├── requirements.txt
-├── Procfile
-├── render.yaml
-├── static/
-│   ├── css/style.css
-│   ├── js/pdf_viewer.js
-│   └── img/default_logo.svg
-└── templates/
-```
+| Tipo | Formatos |
+|---|---|
+| Guía de estudio | PDF, DOC, DOCX |
+| Presentación | PDF, PPT, PPTX |
+| Podcast | MP3, WAV, M4A, OGG |
+| Logo | PNG, JPG, JPEG, WEBP, SVG |
 
-## 2. Uso local
+## Ejecución local
 
 ```bash
-cd centro_estudios_pergamino
 python -m venv .venv
-.venv\Scripts\activate     # Windows
-# source .venv/bin/activate # macOS/Linux
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
-set ADMIN_PASSWORD=tu_clave_segura
-set SECRET_KEY=una_clave_larga_aleatoria
 python app.py
 ```
 
-Abre:
+Entrar en:
 
 ```text
 http://127.0.0.1:5000
@@ -50,98 +47,43 @@ Panel de administración:
 http://127.0.0.1:5000/admin
 ```
 
-Si no defines `ADMIN_PASSWORD`, la clave local por defecto es:
+Clave local por defecto:
 
 ```text
 cambiar-esta-clave
 ```
 
-Cámbiala siempre antes de publicar.
+En producción debes cambiarla mediante variable de entorno.
 
-## 3. Subida de contenido
-
-Desde el panel puedes:
-
-1. Cambiar el nombre del sitio.
-2. Subir el logo.
-3. Publicar guías PDF.
-4. Publicar presentaciones PDF.
-5. Publicar podcast en MP3, WAV, M4A u OGG.
-6. Publicar reseñas.
-7. Eliminar materiales y reseñas.
-
-## 4. Despliegue en Render
-
-### Opción recomendada: Blueprint con `render.yaml`
-
-1. Sube esta carpeta a un repositorio de GitHub.
-2. En Render, crea un nuevo **Blueprint** usando ese repositorio.
-3. Render leerá `render.yaml`.
-4. Define la variable `ADMIN_PASSWORD` con una clave segura.
-5. Despliega.
-
-El archivo `render.yaml` ya define:
-
-```yaml
-buildCommand: pip install -r requirements.txt
-startCommand: gunicorn app:app
-DATA_DIR: /var/data
-```
-
-También define un disco persistente montado en `/var/data`, donde se guardan:
-
-- Base SQLite `site.db`.
-- Archivos subidos.
-- Logo personalizado.
-
-### Opción manual: Web Service
-
-En Render crea un **Web Service** conectado al repositorio:
-
-- Runtime: Python.
-- Build command:
-
-```bash
-pip install -r requirements.txt
-```
-
-- Start command:
-
-```bash
-gunicorn app:app
-```
-
-- Variables de entorno:
+## Variables de entorno recomendadas en Render
 
 ```text
-SECRET_KEY=una_clave_larga_aleatoria
 ADMIN_PASSWORD=tu_clave_segura
+SECRET_KEY=una_cadena_larga_aleatoria
 DATA_DIR=/var/data
 MAX_UPLOAD_MB=120
 ```
 
-Luego agrega un **Persistent Disk** montado en:
+## Subir el logo
 
-```text
-/var/data
-```
+Hay dos opciones:
 
-## 5. Nota importante sobre almacenamiento en Render
+1. Desde la web: entra a `/admin`, luego al panel, sección **Identidad visual**, y sube el logo en PNG.
+2. Como logo base del proyecto: reemplaza el archivo `static/img/logo_cec.png` antes de subir el repositorio.
 
-La aplicación permite subir archivos, por lo que necesita almacenamiento persistente. Si se despliega sin disco persistente, los archivos y la base local pueden perderse después de reinicios o redespliegues. Para un uso más avanzado, puedes reemplazar SQLite + disco por PostgreSQL y un servicio de almacenamiento de objetos.
+Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`.
 
-## 6. Personalización rápida
+## Organización por tema
 
-- Colores y estética: `static/css/style.css`.
-- Logo provisional: `static/img/default_logo.svg`.
-- Tamaño máximo de subida: variable `MAX_UPLOAD_MB`.
-- Nombre visible del sitio: desde el panel de administración.
+Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
 
-## 7. Producción
+Cada tema tendrá una URL pública con todos sus materiales asociados.
 
-Recomendaciones mínimas:
+## Nota sobre PPT/PPTX y DOC/DOCX
 
-- Usar una clave `ADMIN_PASSWORD` fuerte.
-- No publicar la clave en GitHub.
-- Activar disco persistente en Render.
-- Mantener copias de seguridad periódicas de `/var/data` si el contenido es importante.
+Los navegadores no muestran de forma nativa archivos Word o PowerPoint como un PDF. Por eso la app usa dos estrategias:
+
+- DOCX: se convierte a HTML para lectura web con tablas básicas.
+- DOC, DOCX, PPT, PPTX: se ofrecen mediante visor Office embebido cuando la app está desplegada públicamente en Render.
+
+Para presentaciones con máxima estabilidad visual, exporta también una copia en PDF y súbela como presentación.
