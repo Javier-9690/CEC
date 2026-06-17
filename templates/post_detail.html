@@ -11,9 +11,6 @@
 </section>
 
 <section class="viewer-panel parchment-panel protected-content" oncontextmenu="return false">
-  <div class="protected-note">
-    <strong>Modo lectura:</strong> el texto está protegido contra copia simple y selección directa.
-  </div>
   <article class="reading-shell text-article protected-reading watermark-zone">
     <div class="watermark-layer" aria-hidden="true">{{ site_name }}</div>
     {{ post.body|replace('\n', '<br>')|safe }}

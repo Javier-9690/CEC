@@ -1011,3 +1011,187 @@ button[disabled] {
     padding: 18px;
   }
 }
+
+/* --- Diseño armónico del sello CEC --- */
+.parchment-panel > *,
+.content-card > *,
+.review-card > *,
+.podcast-card > *,
+.empty-card > *,
+.topic-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.site-header {
+  padding: 14px 24px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(250, 236, 198, .93), rgba(233, 207, 145, .86));
+  border-color: rgba(92, 66, 35, .42);
+  box-shadow: 0 12px 30px rgba(45, 31, 14, .13);
+}
+
+.brand {
+  gap: 16px;
+  align-items: center;
+}
+
+.brand-seal {
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent !important;
+  overflow: visible;
+}
+
+.brand-seal img,
+.hero-logo {
+  background: transparent !important;
+  mix-blend-mode: normal !important;
+  box-shadow: none !important;
+}
+
+.brand-seal img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 8px rgba(47, 36, 24, .18));
+}
+
+.brand-text strong {
+  font-size: clamp(1.18rem, 2.05vw, 1.72rem);
+  line-height: 1.12;
+  letter-spacing: .035em;
+}
+
+.brand-text small {
+  font-size: .92rem;
+}
+
+.main-nav {
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.main-nav a {
+  padding: 8px 10px;
+  font-size: .95rem;
+}
+
+.hero {
+  grid-template-columns: minmax(0, 1.14fr) minmax(280px, .86fr);
+  gap: clamp(28px, 5vw, 56px);
+  padding: clamp(30px, 5vw, 64px);
+}
+
+.hero h1 {
+  max-width: 720px;
+  font-size: clamp(2.35rem, 5.2vw, 4.45rem);
+  letter-spacing: -.015em;
+}
+
+.hero-copy {
+  max-width: 680px;
+}
+
+.logo-hero-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.logo-hero-card::after {
+  display: none;
+}
+
+.hero-logo {
+  width: min(330px, 74vw);
+  max-height: none;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 22px rgba(47, 36, 24, .16));
+}
+
+.logo-hero-card h2 {
+  margin: 18px 0 0;
+  font-family: "Cinzel", Georgia, serif;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+}
+
+.logo-hero-card .stats-grid {
+  width: min(430px, 100%);
+  margin: 18px auto 0;
+  padding: 14px;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgba(92, 66, 35, .42);
+  border-radius: 22px;
+  background: rgba(255, 246, 217, .52);
+  backdrop-filter: blur(3px);
+}
+
+.logo-hero-card .stats-grid div {
+  background: rgba(255, 250, 230, .50);
+  border-color: rgba(92, 66, 35, .26);
+}
+
+.logo-hero-card .stats-grid strong {
+  font-size: 1.55rem;
+}
+
+.flash.success {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .site-header {
+    gap: 12px;
+  }
+  .main-nav {
+    justify-content: center;
+  }
+  .brand {
+    justify-content: center;
+  }
+  .hero {
+    text-align: center;
+  }
+  .hero-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header {
+    padding: 12px 14px;
+    border-radius: 20px;
+  }
+  .brand-seal {
+    width: 76px;
+    height: 76px;
+  }
+  .brand-text strong {
+    font-size: 1.05rem;
+  }
+  .main-nav a {
+    padding: 7px 8px;
+    font-size: .86rem;
+  }
+  .hero {
+    padding: 24px 18px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 12vw, 2.9rem);
+  }
+  .hero-logo {
+    width: min(250px, 72vw);
+  }
+  .logo-hero-card .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

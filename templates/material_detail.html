@@ -14,9 +14,6 @@
   {% set file_url = url_for('material_file', material_id=material.id) if material.filename else '' %}
   {% set lower_name = material.filename.lower() if material.filename else '' %}
 
-  <div class="protected-note">
-    <strong>Modo lectura protegido:</strong> no se muestran botones de descarga pública y se bloquea la copia simple del texto visible. Las capturas de pantalla no pueden impedirse totalmente desde un navegador.
-  </div>
 
   {% if material.kind in ['guia', 'presentacion'] and lower_name.endswith('.pdf') %}
     <div class="viewer-actions">
@@ -31,11 +28,7 @@
     </div>
 
   {% elif ext in ['doc', 'docx', 'ppt', 'pptx'] %}
-    <div class="viewer-actions">
-      <span class="hint viewer-note">Vista incrustada con visor Office. Para mayor control de descarga en presentaciones, exporta también una copia PDF.</span>
-    </div>
     <iframe class="office-frame protected-frame" src="{{ office_viewer_url(file_url_external) }}" title="Visor Office" loading="lazy"></iframe>
-    <p class="hint viewer-note">El visor Office funciona correctamente cuando la página ya está desplegada públicamente en Render. En local puede no cargar porque el archivo no es accesible desde internet.</p>
 
   {% elif material.kind == 'podcast' %}
     <div class="audio-box">

@@ -1,32 +1,61 @@
-# Centro de Estudios CEC - Suscripción y protección visual
+# Centro de Estudios Católicos · Plataforma pergamino
 
-Aplicación Flask para biblioteca digital con estética pergamino, organizada por temas.
+Aplicación web Flask preparada para Render.com. Permite publicar contenido de estudio con estética tradicional tipo pergamino y logo institucional CEC.
 
 ## Funciones principales
 
-- Temas de estudio.
-- Guías PDF, DOC y DOCX.
-- Presentaciones PDF con visor interactivo.
-- Presentaciones PPT/PPTX con visor Office cuando el sitio está público.
-- Podcast subidos: MP3, WAV, M4A, AAC, OGG.
-- Videos subidos: MP4, WEBM, OGV, MOV.
-- Videos de YouTube embebidos.
-- Enlaces de SoundCloud embebidos.
-- Textos/artículos publicados desde el panel.
-- Reseñas asociadas a temas.
-- Posts públicos.
-- Formulario de suscripción para recibir avisos de nuevos posts.
-- Exportación CSV de suscriptores desde el panel.
-- Envío opcional por SMTP si se configuran variables de correo.
-- Modo sin descarga pública.
-- Bloqueo de copia simple, clic derecho, impresión y selección en textos protegidos.
-- Marca de agua disuasiva en textos y visor PDF.
+- Página pública con logo institucional.
+- Temas de estudio: cada tema agrupa materiales y reseñas.
+- Guías de estudio en PDF, DOC y DOCX.
+- Conversión de DOCX a lectura web con tablas básicas mediante `mammoth`.
+- Presentaciones en PDF, PPT y PPTX.
+- Visor interactivo propio para PDF con avance de páginas y zoom.
+- Visor Office para DOC, DOCX, PPT y PPTX cuando el sitio está publicado en internet.
+- Podcast con reproductor de audio.
+- Reseñas asociables a temas.
+- Panel de administración protegido por clave.
+- Carga de logo PNG/JPG/WEBP/SVG desde el panel.
+- SQLite con migraciones suaves para versiones anteriores.
 
-## Advertencia importante sobre protección
+## Formatos aceptados
 
-La web puede bloquear copia simple, selección, clic derecho, impresión desde el navegador y botones de descarga. Sin embargo, ningún sitio web puede impedir completamente capturas de pantalla, grabaciones de pantalla, fotografías externas, herramientas de desarrollador u OCR. Esta versión aplica protección disuasiva, no DRM absoluto.
+| Tipo | Formatos |
+|---|---|
+| Guía de estudio | PDF, DOC, DOCX |
+| Presentación | PDF, PPT, PPTX |
+| Podcast | MP3, WAV, M4A, AAC, OGG |
+| Logo | PNG, JPG, JPEG, WEBP, SVG |
 
-## Variables recomendadas en Render
+## Ejecución local
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -r requirements.txt
+python app.py
+```
+
+Entrar en:
+
+```text
+http://127.0.0.1:5000
+```
+
+Panel de administración:
+
+```text
+http://127.0.0.1:5000/admin
+```
+
+Clave local por defecto:
+
+```text
+cambiar-esta-clave
+```
+
+En producción debes cambiarla mediante variable de entorno.
+
+## Variables de entorno recomendadas en Render
 
 ```text
 ADMIN_PASSWORD=tu_clave_segura
@@ -35,39 +64,67 @@ DATA_DIR=/var/data
 MAX_UPLOAD_MB=120
 ```
 
-Para envío automático de correos a suscriptores, agrega opcionalmente:
+## Subir el logo
+
+Hay dos opciones:
+
+1. Desde la web: entra a `/admin`, luego al panel, sección **Identidad visual**, y sube el logo en PNG.
+2. Como logo base del proyecto: reemplaza el archivo `static/img/logo_cec.png` antes de subir el repositorio.
+
+Esta versión ya incluye el logo CEC recibido como `static/img/logo_cec.png`.
+
+## Organización por tema
+
+Desde el panel puedes crear temas. Al subir una guía, PDF, PPT, podcast o reseña, puedes elegir un tema existente o crear uno nuevo en el mismo formulario.
+
+Cada tema tendrá una URL pública con todos sus materiales asociados.
+
+## Nota sobre PPT/PPTX y DOC/DOCX
+
+Los navegadores no muestran de forma nativa archivos Word o PowerPoint como un PDF. Por eso la app usa dos estrategias:
+
+- DOCX: se convierte a HTML para lectura web con tablas básicas.
+- DOC, DOCX, PPT, PPTX: se ofrecen mediante visor Office embebido cuando la app está desplegada públicamente en Render.
+
+Para presentaciones con máxima estabilidad visual, exporta también una copia en PDF y súbela como presentación.
+
+
+## Barra de avance
+
+Esta versión incluye una barra de avance al subir archivos desde el panel de administración. La barra muestra el porcentaje y el volumen cargado, especialmente útil para audios, videos y PDF pesados. También agrega una barra visual de reproducción para audios y videos subidos directamente al sitio.
+
+
+## Compatibilidad de audio M4A
+
+La aplicación acepta archivos `.m4a` como podcast subido y los sirve con `Content-Type: audio/mp4`, que es el tipo MIME más compatible para reproducción en navegadores modernos. También acepta `.aac`.
+
+
+## Corrección móvil del visor PDF
+
+Esta versión ajusta automáticamente el tamaño de las páginas PDF al ancho real del celular. El visor interactivo ya no fuerza un canvas más ancho que la pantalla, por lo que mantiene la estética pergamino, evita desbordes laterales y conserva los controles de navegación, zoom y pantalla completa.
+
+
+## Ajuste visual
+
+La protección contra copia simple y descarga pública permanece activa, pero los avisos visibles al visitante fueron retirados para mantener una presentación más profesional.
+
+## Corrección visual del sello CEC
+
+Esta versión incluye un sello institucional con transparencia real en:
 
 ```text
-SMTP_HOST=smtp.tu-proveedor.com
-SMTP_PORT=587
-SMTP_USER=tu_usuario_smtp
-SMTP_PASSWORD=tu_clave_smtp
-MAIL_FROM=correo@tudominio.cl
-SMTP_USE_TLS=1
+static/img/logo_cec.png
 ```
 
-Si no configuras SMTP, los posts se publican igual y puedes exportar los suscriptores como CSV.
+Además, el código fuerza el uso del sello institucional limpio incluido en el proyecto cuando existe un logo antiguo guardado con falso fondo transparente en `/var/data/uploads`. Las futuras cargas desde el panel se normalizan como `site_logo.<ext>`.
 
-## Render
+Si en Render seguía apareciendo un logo con fondo cuadriculado, esta versión evita que ese archivo anterior vuelva a tomar prioridad sobre el sello limpio del proyecto.
 
-Build Command:
+Cambios visuales principales:
 
-```bash
-pip install -r requirements.txt
-```
-
-Start Command:
-
-```bash
-gunicorn app:app
-```
-
-## Persistencia
-
-Para que archivos subidos, textos, posts, reseñas y suscriptores permanezcan después de reinicios o redeploys, usa un Persistent Disk montado en:
-
-```text
-/var/data
-```
-
-Si usas Render gratis sin disco persistente, el almacenamiento local puede perderse.
+- Header más proporcionado.
+- Logo sin caja rectangular.
+- Logo con transparencia real.
+- Mejor tamaño del sello en portada.
+- Eliminación visual de mensajes de éxito que ensuciaban la estética del panel.
+- Mejor jerarquía entre sello, título y navegación.

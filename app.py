@@ -435,8 +435,11 @@ def create_app() -> Flask:
 
     @app.context_processor
     def inject_globals():
+        # Sello institucional limpio: evita que un logo antiguo con falso fondo transparente
+        # guardado en /var/data vuelva a deformar el diseño. Las futuras subidas se
+        # habilitan usando el nombre normalizado site_logo.png.
         logo_filename = get_setting("logo_filename")
-        if logo_filename:
+        if logo_filename and logo_filename.startswith("site_logo.") and (UPLOAD_DIR / logo_filename).exists():
             logo_url = url_for("uploaded_file", filename=logo_filename)
         else:
             logo_url = url_for("static", filename="img/logo_cec.png")
@@ -1064,10 +1067,11 @@ def admin_logo():
         if not allowed_file(file.filename, LOGO_EXTENSIONS):
             flash("El logo debe ser PNG, JPG, WEBP o SVG.", "warning")
             return redirect(url_for("admin_dashboard"))
-        stored_name = "logo_" + unique_filename(file.filename)
+        suffix = Path(file.filename).suffix.lower() or ".png"
+        stored_name = "site_logo" + suffix
         file.save(UPLOAD_DIR / stored_name)
         set_setting("logo_filename", stored_name)
-    flash("Identidad visual actualizada.", "success")
+    # No se muestra aviso de éxito para mantener el panel limpio visualmente.
     return redirect(url_for("admin_dashboard"))
 
 
